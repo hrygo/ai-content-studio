@@ -292,7 +292,7 @@ def merge_audio_files(file_list, output_file, pan_list=None, bgm_file=None):
         inputs.extend(["-i", bgm_file])
         bgm_idx = len(processed_list)
         filter_parts.append(
-            f"[{bgm_idx}:a]volume=0.15,sidechaincompress=threshold=0.1:ratio=5:attack=200:release=1000[bgm_ducked];"
+            f"[{bgm_idx}:a]volume=0.15,acompressor=threshold=-40dB:ratio=20:attack=5:release=200[bgm_ducked];"
             f"[mixed_voice][bgm_ducked]amix=inputs=2:duration=first[out]"
         )
     else:
@@ -518,7 +518,7 @@ def main():
     parser.add_argument("--bgm", help="背景音乐文件路径")
     parser.add_argument("-o", "--output", default="qwen_output.wav", help="输出文件路径")
     parser.add_argument("-v", "--voice", default="cherry",
-                        help="音色 (cherry/ethan/nofish/jennifer/ryan/katerina/elias/jada/dylan/sunny/li/marcus/roy/peter/rocky/kiki/eric)")
+                        help="音色 (qwen3-omni-flash 账户可用: cherry/ethan/chelsie; 完整列表见 https://help.aliyun.com/zh/model-studio/omni-voice-list)")
     parser.add_argument("-m", "--model", default="qwen3-omni-flash", help="模型名称")
 
     args = parser.parse_args()

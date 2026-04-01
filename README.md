@@ -112,9 +112,15 @@ python tts/qwen_omni_tts_tool.py "待合成文本" -o output.wav -v cherry
 python tts/qwen_omni_tts_tool.py -s dialogue.txt -r configs/roles.json -o multi_voice.mp3 --stereo
 ```
 
-**可用音色**: `cherry`（默认）, `ethan`, `nofish`, `jennifer`, `ryan`, `katerina`, `elias`, `jada`, `dylan`, `sunny`, `li`, `marcus`, `roy`, `peter`, `rocky`, `kiki`, `eric`
+**可用音色**:
 
-> Qwen Omni 音色列表完整版见[阿里云文档](https://help.aliyun.com/zh/model-studio/omni-voice-list)
+| 引擎 | 可用音色 |
+|------|---------|
+| **qwen3-omni-flash**（当前账户） | `cherry`（默认）、`ethan`、`chelsie` |
+| **qwen3.5-omni**（完整列表） | 女声：Tina（默认）、Cindy、Liora、Mira、Serena、Maia、Momo、Angel、Mia、Katerina、Jennifer、Mione、Sunny、Qiao、Sohee、Anna、Sonrisa、Roya、Hana、Griet、Eliška、Marina、Siiri、Ingrid、Sigga、Bea、Chloe |
+| | 男声：Raymond、Ethan、Theo、Harvey、Evan、Wil、Li、Cassian、Joyner、Gold、Ryan、Aiden、Dylan、Eric、Peter、Joseph、Marcus、Rocky、Lenn、Bodega、Emilien、Andre、Radio Gol、Alek、Rizky、Arda、Dolce、Jakub |
+
+> Qwen Omni 音色列表完整版见[阿里云百炼官方文档](https://help.aliyun.com/zh/model-studio/omni-voice-list)
 
 ---
 

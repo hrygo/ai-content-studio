@@ -247,7 +247,7 @@ def merge_audio_files(file_list, output_file, pan_list=None, bgm_file=None):
         inputs.extend(["-i", bgm_file])
         bgm_idx = len(processed_list)
         filter_parts.append(
-            f"[{bgm_idx}:a]volume=0.15,sidechaincompress=threshold=0.1:ratio=5:attack=200:release=1000[bgm_ducked];"
+            f"[{bgm_idx}:a]volume=0.15,acompressor=threshold=-40dB:ratio=20:attack=5:release=200[bgm_ducked];"
             f"[mixed_voice][bgm_ducked]amix=inputs=2:duration=first[out]"
         )
     else:

@@ -30,7 +30,8 @@ console = Console()
 MODES = {
     "deep_dive": {
         "name": "深入探究 (Qwen Omni)",
-        "system": """You are a Peabody Award-winning podcast producer.
+        "system": """You are a Peabody Award-winning podcast producer / 你是一位获奖播客制作人。
+IMPORTANT: Always respond in the SAME language as the user's input text. / 必须使用与输入文本相同的语言输出，切勿翻译。
 Transform the provided source into a realistic dialogue script, then read it aloud naturally.
 Rules:
 - Output ONLY the spoken script in [Host, emotion]: content format
@@ -41,7 +42,8 @@ Rules:
     },
     "summary": {
         "name": "摘要 (Qwen Omni)",
-        "system": """You are a professional voice narrator.
+        "system": """You are a professional voice narrator / 你是一位专业资讯播音员。
+IMPORTANT: Always respond in the SAME language as the user's input text. / 必须使用与输入文本相同的语言输出，切勿翻译。
 Read the provided text aloud exactly as given, in a clear and concise manner.
 Rules:
 - Output ONLY the narration in [Narrator, neutral]: content format
@@ -50,7 +52,8 @@ Rules:
     },
     "review": {
         "name": "评论 (Qwen Omni)",
-        "system": """You are a seasoned industry critic.
+        "system": """You are a seasoned industry critic / 你是一位资深行业评论家。
+IMPORTANT: Always respond in the SAME language as the user's input text. / 必须使用与输入文本相同的语言输出，切勿翻译。
 Transform the provided source into a critical review script, then read it aloud.
 Rules:
 - Output ONLY the review in [Expert, emotion]: content format
@@ -60,7 +63,8 @@ Rules:
     },
     "debate": {
         "name": "辩论 (Qwen Omni)",
-        "system": """You are a debate moderator.
+        "system": """You are a debate moderator / 你是一位辩论赛主席。
+IMPORTANT: Always respond in the SAME language as the user's input text. / 必须使用与输入文本相同的语言输出，切勿翻译。
 Transform the provided source into a structured debate script, then read it aloud.
 Rules:
 - Output ONLY the debate in [Proponent, emotion]: or [Opponent, emotion]: format
@@ -90,10 +94,10 @@ def _call_qwen_omni(source_text, mode, voice, instruction, api_key, api_url):
     mode_config = MODES.get(mode, MODES["summary"])
     system_prompt = mode_config["system"]
 
-    user_content = f"Source text:\n{source_text}\n\n"
+    user_content = f"Source text / 源文本:\n{source_text}\n\n"
     if instruction:
-        user_content += f"Specific requirement: {instruction}\n\n"
-    user_content += "Generate the script and speak it aloud."
+        user_content += f"Specific requirement / 特别要求: {instruction}\n\n"
+    user_content += "Generate the script and speak it aloud. / 生成脚本并朗读。"
 
     headers = {
         "Authorization": f"Bearer {api_key}",
