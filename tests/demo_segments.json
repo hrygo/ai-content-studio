@@ -1,0 +1,19 @@
+[
+    {
+        "text": "本手册详细介绍了如何在 OpenCode 环境中使用封装好的 MiniMax 语音合成工具。",
+        "emotion": "neutral",
+        "speed": 1.0
+    },
+    {
+        "text": "该工具已针对 MiniMax Cloud Pro 密钥完成适配，(laughs) 效果非常出色！",
+        "emotion": "happy",
+        "speed": 1.2,
+        "pitch": 3
+    },
+    {
+        "text": "如果您在使用过程中遇到任何问题，欢迎随时查阅文档。 <#0.5#> 祝您开发愉快。",
+        "emotion": "calm",
+        "speed": 0.8,
+        "pitch": -1
+    }
+]

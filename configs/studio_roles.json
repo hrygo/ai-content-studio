@@ -1,0 +1,35 @@
+{
+    "Alex": {
+        "voice_id": "male-qn-qingse",
+        "speed": 1.1,
+        "pitch": 2
+    },
+    "Sam": {
+        "voice_id": "female-yujie",
+        "speed": 1.0,
+        "pitch": 0
+    },
+    "Narrator": {
+        "voice_id": "female-yujie",
+        "speed": 1.05,
+        "emotion": "neutral"
+    },
+    "Expert": {
+        "voice_id": "male-qn-qingse",
+        "speed": 0.95,
+        "pitch": -1,
+        "emotion": "calm"
+    },
+    "Proponent": {
+        "voice_id": "male-qn-qingse",
+        "speed": 1.1,
+        "pitch": 1,
+        "emotion": "neutral"
+    },
+    "Opponent": {
+        "voice_id": "female-yujie",
+        "speed": 1.05,
+        "pitch": 1,
+        "emotion": "neutral"
+    }
+}

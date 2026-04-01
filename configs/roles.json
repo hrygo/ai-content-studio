@@ -1,0 +1,19 @@
+{
+    "主持人": {
+        "voice_id": "male-qn-qingse",
+        "speed": 1.0,
+        "emotion": "neutral"
+    },
+    "乐观派": {
+        "voice_id": "male-qn-qingse",
+        "speed": 1.2,
+        "pitch": 2,
+        "emotion": "happy"
+    },
+    "怀疑论者": {
+        "voice_id": "male-qn-qingse",
+        "speed": 0.9,
+        "pitch": -2,
+        "emotion": "calm"
+    }
+}

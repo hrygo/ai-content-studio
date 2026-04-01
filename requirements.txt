@@ -1,0 +1,11 @@
+# Core dependencies
+requests>=2.31.0
+
+# Retry logic
+tenacity>=8.0.0
+
+# Observability (progress bars, rich output)
+rich>=13.0.0
+
+# Caching
+cachetools>=5.0.0
