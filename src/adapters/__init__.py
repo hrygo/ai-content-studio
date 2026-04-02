@@ -10,6 +10,12 @@
 - 可替换性强
 """
 
+from .llm_adapters import (
+    LLMEngineInterface,
+    BaseLLMEngine,
+    MiniMaxLLMEngine,
+    QwenLLMEngine,
+)
 from .base_tts_engine import BaseTTSEngine
 from .tts_adapters import (
     MiniMaxTTSEngine,
@@ -18,8 +24,15 @@ from .tts_adapters import (
 from .audio_adapters import FFmpegAudioProcessor
 
 __all__ = [
+    # LLM engines
+    "LLMEngineInterface",
+    "BaseLLMEngine",
+    "MiniMaxLLMEngine",
+    "QwenLLMEngine",
+    # TTS engines
     "BaseTTSEngine",
     "MiniMaxTTSEngine",
     "QwenOmniTTSEngine",
+    # Audio
     "FFmpegAudioProcessor",
 ]
