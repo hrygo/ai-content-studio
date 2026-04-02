@@ -105,6 +105,46 @@ class TestContainer:
         with pytest.raises(ValueError, match="不支持的引擎类型"):
             container.synthesize_speech_use_case("invalid_engine")
 
+    def test_synthesize_speech_use_case_different_engines(self):
+        """测试不同引擎返回不同用例实例"""
+        container = Container()
+        container.minimax_engine = MagicMock()
+        container.qwen_engine = MagicMock()
+
+        use_case_minimax = container.synthesize_speech_use_case("minimax")
+        use_case_qwen = container.synthesize_speech_use_case("qwen")
+
+        # 不同引擎应返回不同用例实例
+        assert use_case_minimax is not use_case_qwen
+        assert use_case_minimax.engine is container.minimax_engine
+        assert use_case_qwen.engine is container.qwen_engine
+
+    def test_synthesize_speech_use_case_same_engine_cached(self):
+        """测试同一引擎返回缓存实例"""
+        container = Container()
+        container.minimax_engine = MagicMock()
+
+        use_case1 = container.synthesize_speech_use_case("minimax")
+        use_case2 = container.synthesize_speech_use_case("minimax")
+
+        # 同一引擎应返回相同缓存实例
+        assert use_case1 is use_case2
+
+    def test_batch_synthesize_use_case_different_engines(self):
+        """测试批量合成用例不同引擎"""
+        container = Container()
+        container.minimax_engine = MagicMock()
+        container.qwen_engine = MagicMock()
+        container.audio_processor = MagicMock()
+
+        use_case_minimax = container.batch_synthesize_use_case("minimax")
+        use_case_qwen = container.batch_synthesize_use_case("qwen")
+
+        # 不同引擎应返回不同用例实例
+        assert use_case_minimax is not use_case_qwen
+        assert use_case_minimax.engine is container.minimax_engine
+        assert use_case_qwen.engine is container.qwen_engine
+
     def test_cleanup(self):
         """测试清理资源"""
         container = Container()

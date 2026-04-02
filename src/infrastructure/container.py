@@ -2,7 +2,7 @@
 依赖注入容器
 """
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Dict
 import os
 
 from ..adapters.tts_adapters import MiniMaxTTSEngine, QwenOmniTTSEngine
@@ -33,9 +33,9 @@ class Container:
     # 音频处理器
     audio_processor: Optional[FFmpegAudioProcessor] = None
 
-    # 用例
-    _synthesize_speech_use_case: Optional[SynthesizeSpeechUseCase] = None
-    _batch_synthesize_use_case: Optional[BatchSynthesizeUseCase] = None
+    # 用例缓存（按引擎类型）
+    _use_case_cache: Dict[str, SynthesizeSpeechUseCase] = field(default_factory=dict)
+    _batch_use_case_cache: Dict[str, BatchSynthesizeUseCase] = field(default_factory=dict)
 
     # 配置
     config: dict = field(default_factory=dict)
@@ -75,7 +75,7 @@ class Container:
         self, engine_type: str = "minimax"
     ) -> SynthesizeSpeechUseCase:
         """
-        获取单次合成用例
+        获取单次合成用例（按引擎类型缓存）
 
         Args:
             engine_type: 引擎类型（minimax 或 qwen）
@@ -83,17 +83,17 @@ class Container:
         Returns:
             SynthesizeSpeechUseCase: 用例实例
         """
-        if self._synthesize_speech_use_case is None:
+        if engine_type not in self._use_case_cache:
             engine = self._get_engine(engine_type)
-            self._synthesize_speech_use_case = SynthesizeSpeechUseCase(engine=engine)
+            self._use_case_cache[engine_type] = SynthesizeSpeechUseCase(engine=engine)
 
-        return self._synthesize_speech_use_case
+        return self._use_case_cache[engine_type]
 
     def batch_synthesize_use_case(
         self, engine_type: str = "minimax"
     ) -> BatchSynthesizeUseCase:
         """
-        获取批量合成用例
+        获取批量合成用例（按引擎类型缓存）
 
         Args:
             engine_type: 引擎类型（minimax 或 qwen）
@@ -101,13 +101,13 @@ class Container:
         Returns:
             BatchSynthesizeUseCase: 用例实例
         """
-        if self._batch_synthesize_use_case is None:
+        if engine_type not in self._batch_use_case_cache:
             engine = self._get_engine(engine_type)
-            self._batch_synthesize_use_case = BatchSynthesizeUseCase(
+            self._batch_use_case_cache[engine_type] = BatchSynthesizeUseCase(
                 engine=engine, audio_processor=self.audio_processor
             )
 
-        return self._batch_synthesize_use_case
+        return self._batch_use_case_cache[engine_type]
 
     def _get_engine(self, engine_type: str):
         """获取 TTS 引擎"""

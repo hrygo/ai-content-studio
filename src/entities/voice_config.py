@@ -1,7 +1,8 @@
 """
 音色配置实体
 """
-from dataclasses import dataclass
+import dataclasses
+from dataclasses import dataclass, fields
 from typing import Union, Optional
 
 from .enums import EmotionType
@@ -67,18 +68,27 @@ class VoiceConfig:
         """
         从字典创建配置
 
+        使用 dataclasses.fields() 反射获取默认值，确保与类定义同步
+
         Args:
             data: 配置字典
 
         Returns:
             VoiceConfig 实例
         """
+        # 构建默认值映射
+        defaults = {
+            f.name: f.default
+            for f in fields(cls)
+            if f.default is not dataclasses.MISSING
+        }
+
         return cls(
-            voice_id=data.get("voice", "male-qn-qingse"),
-            speed=data.get("speed", 1.0),
-            volume=data.get("volume", 1.0),
-            pitch=data.get("pitch", 0),
-            emotion=data.get("emotion", EmotionType.NEUTRAL)
+            voice_id=data.get("voice", defaults.get("voice_id", "male-qn-qingse")),
+            speed=data.get("speed", defaults.get("speed", 1.0)),
+            volume=data.get("volume", defaults.get("volume", 1.0)),
+            pitch=data.get("pitch", defaults.get("pitch", 0)),
+            emotion=data.get("emotion", defaults.get("emotion", EmotionType.NEUTRAL))
         )
 
     def to_dict(self) -> dict:

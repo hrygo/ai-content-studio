@@ -103,18 +103,12 @@ class MiniMaxTTSEngine(BaseTTSEngine, TTSEngineInterface):
         }
 
     def _normalize_emotion(self, emotion: Union[str, EmotionType]) -> str:
-        """标准化情感参数"""
-        if hasattr(emotion, "value"):
-            # MiniMax 情感映射
-            emotion_map = {
-                EmotionType.NEUTRAL: "neutral",
-                EmotionType.HAPPY: "happy",
-                EmotionType.SAD: "sad",
-                EmotionType.ANGRY: "angry",
-                EmotionType.FEARFUL: "fearful",
-            }
-            return emotion_map.get(emotion, "neutral")
-        return str(emotion)
+        """
+        标准化情感参数
+
+        直接使用基类方法，因为 EmotionType 枚举值已经是小写字符串
+        """
+        return self._normalize_enum_value(emotion)
 
     def _estimate_duration(self, audio_data: bytes) -> float:
         """
