@@ -113,7 +113,7 @@ def get_minimax_config():
 
     options = minimax_config.get("options", {})
     api_key = options.get("apiKey")
-    base_url = options.get("baseURL", "https://api.minimax.io/anthropic")
+    base_url = options.get("baseURL", "https://api.minimax.io/anthropic/v1")
 
     return {
         "api_key": api_key,
