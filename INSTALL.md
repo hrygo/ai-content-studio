@@ -103,8 +103,12 @@ ls -la ~/.openclaw/skills/ai-content-studio
 
 **ClawHub 集成**（可选）：
 ```bash
-# 如果使用 ClawHub 管理 skill，可从 ClawHub 安装
-claw skill add ai-content-studio
+# 方式 1：使用 OpenClaw 原生命令（推荐）
+openclaw skills install ai-content-studio
+
+# 方式 2：使用 ClawHub CLI
+npm i -g clawhub   # 先安装 CLI（如尚未安装）
+clawhub install ai-content-studio
 ```
 
 ### 3.4 其他 Agent（Codex / Cursor / Cline）
