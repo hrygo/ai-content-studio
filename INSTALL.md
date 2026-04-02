@@ -8,10 +8,10 @@
 
 ```bash
 # 安装
-./install_ai_content_studio_skill.sh
+./install_skill.sh
 
 # 卸载
-./install_ai_content_studio_skill.sh --uninstall
+./install_skill.sh --uninstall
 
 # 重装（重新运行 install.sh 即可，自动备份旧版本）
 ```
