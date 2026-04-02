@@ -27,7 +27,7 @@
 
 ```bash
 # 当前目录即为 skill 源码仓库
-SKILL_SOURCE="$(pwd)"  # 或显式指定：/Users/huangzhonghui/ai-content-studio
+SKILL_SOURCE="$(pwd)"  # 或显式指定：/path/to/ai-content-studio
 ```
 
 ### 步骤 2：运行安装脚本
@@ -59,7 +59,7 @@ ls -la ~/.claude/skills/ai-content-studio
 ## 卸载 Skill
 
 ```bash
-cd /Users/huangzhonghui/ai-content-studio
+cd <skill-source-directory>
 bash scripts/install.sh --uninstall
 ```
 
@@ -74,7 +74,7 @@ bash scripts/install.sh --uninstall
 如果安装脚本不可用，Agent 可直接执行：
 
 ```bash
-SKILL_SOURCE="/Users/huangzhonghui/ai-content-studio"
+SKILL_SOURCE="$(pwd)"  # skill 源码仓库路径
 SKILL_DEST="$HOME/.agents/skills/ai-content-studio"
 CLAUDE_LINK="$HOME/.claude/skills/ai-content-studio"
 
@@ -128,7 +128,7 @@ tree -L 2 ~/.agents/skills/ai-content-studio/
 
 # 验证符号链接
 readlink ~/.claude/skills/ai-content-studio
-# 应输出：/Users/huangzhonghui/.agents/skills/ai-content-studio
+# 应输出：<home-path>/.agents/skills/ai-content-studio
 ```
 
 ### 2. Skill 激活测试
@@ -206,6 +206,6 @@ export MINIMAX_API_KEY="..."
 如果 skill 源码有更新，重新运行安装脚本：
 
 ```bash
-cd /Users/huangzhonghui/ai-content-studio
+cd <skill-source-directory>
 bash scripts/install.sh  # 自动备份旧版本
 ```
