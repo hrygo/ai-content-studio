@@ -9,3 +9,6 @@ rich>=13.0.0
 
 # Caching
 cachetools>=5.0.0
+
+# Audio processing (for normalization and concatenation)
+pydub>=0.25.1

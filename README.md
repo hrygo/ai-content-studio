@@ -103,6 +103,39 @@
 
 ---
 
+## 🏗️ 新架构特性（v2.0）
+
+基于 `minimax_aipodcast` 项目的架构经验，完成了全面的架构优化：
+
+### 核心改进
+
+1. **分层架构** - `core/` + `services/` 清晰分层
+2. **统一 API 客户端** - 自动重试、详细错误处理
+3. **音量标准化** - 统一到 -18 dB，提升音频质量
+4. **配置管理** - JSON 配置文件 + 环境变量支持
+5. **并发优化** - 生产者-消费者模式，提升性能
+
+### 使用新架构
+
+```python
+from services.api_client import create_minimax_client
+from services.audio_processor import normalize_volume
+
+# API 调用（自动重试）
+client = create_minimax_client()
+audio_bytes = client.text_to_speech("你好，世界！")
+
+# 音量标准化
+normalize_volume("input.mp3", "output.mp3", target_dbfs=-18.0)
+```
+
+详见：
+- [`docs/MIGRATION_GUIDE.md`](docs/MIGRATION_GUIDE.md) - 迁移指南
+- [`docs/OPTIMIZATION_SUMMARY.md`](docs/OPTIMIZATION_SUMMARY.md) - 优化总结
+- [`examples/concurrent_processing.py`](examples/concurrent_processing.py) - 并发示例
+
+---
+
 ## 常见问题
 
 **Q: 支持中文还是英文？**
