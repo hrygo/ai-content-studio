@@ -18,11 +18,11 @@
 #   ~/.openclaw/skills/ai-content-studio     OpenClaw 兼容（符号链接）
 #
 # Skill Bundle 结构：
-#   SKILL.md           ← 主入口（含 OpenClaw metadata）
-#   requirements.txt   ← Python 依赖清单
-#   scripts/           ← 安装脚本、TTS 引擎源码
-#   references/        ← 参考文档（配置文件、故障排查）
-#   tests/             ← 测试脚本
+#   SKILL.md           ← 主入口
+#   pyproject.toml     ← Python 包配置（pip install -e .）
+#   src/               ← Clean Architecture 源码
+#   tests/             ← 测试套件
+#   docs/              ← 文档
 #────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -68,6 +68,12 @@ OPTIONS:
   ~/.claude/skills/ai-content-studio          Claude Code 符号链接
   ~/.config/opencode/skills/ai-content-studio OpenCode 符号链接
   ~/.openclaw/skills/ai-content-studio        OpenClaw 符号链接
+
+安装后可用：
+  ai-studio synthesize ...   # 单段 TTS
+  ai-studio dialogue ...     # 对话脚本 TTS
+  ai-studio studio ...       # AI 播客（全流程）
+  ai-studio batch ...         # 批量 TTS
 
 示例：
   bash scripts/install.sh                      # 安装到所有 Agent
@@ -204,8 +210,8 @@ uninstall_skill() {
 # 安装
 #────────────────────────────────────────────────────────────────────────────
 install_skill() {
-    if [[ ! -f "${REPO_ROOT}/SKILL.md" ]]; then
-        echo "✗ 错误：找不到 ${REPO_ROOT}/SKILL.md"
+    if [[ ! -f "${REPO_ROOT}/SKILL.md" ]] || [[ ! -d "${REPO_ROOT}/src" ]]; then
+        echo "✗ 错误：找不到 SKILL.md 或 src/ 目录"
         echo "  请确保在 ai-content-studio 项目根目录运行此脚本。"
         exit 1
     fi
@@ -229,9 +235,12 @@ install_skill() {
     # 复制 skill bundle
     echo "  → 复制 skill bundle..."
     cp "${REPO_ROOT}/SKILL.md" "${SKILL_DEST}/SKILL.md"
-    cp "${REPO_ROOT}/requirements.txt" "${SKILL_DEST}/requirements.txt"
+    cp "${REPO_ROOT}/pyproject.toml" "${SKILL_DEST}/pyproject.toml"
 
-    for subdir in scripts references tests; do
+    # 复制 Clean Architecture 源码
+    cp -r "${REPO_ROOT}/src" "${SKILL_DEST}/src"
+
+    for subdir in tests docs; do
         if [[ -d "${REPO_ROOT}/${subdir}" ]]; then
             cp -r "${REPO_ROOT}/${subdir}" "${SKILL_DEST}/${subdir}"
         fi
@@ -275,14 +284,14 @@ install_skill() {
     [[ -L "$LINK_OPENCODE" ]] && echo "    OpenCode: $(readlink "$LINK_OPENCODE")"
     [[ -L "$LINK_OPENCLAW" ]] && echo "    OpenClaw: $(readlink "$LINK_OPENCLAW")"
     # 自动安装 Python 依赖
-    if [[ -f "${SKILL_DEST}/requirements.txt" ]]; then
+    if [[ -f "${SKILL_DEST}/pyproject.toml" ]]; then
         echo "  → 安装 Python 依赖..."
-        # 尝试静默安装，失败则提示
-        if ! python3 -m pip install -r "${SKILL_DEST}/requirements.txt" &>/dev/null; then
+        # 使用 pip install -e . 安装可编辑模式（含 ai-studio CLI 入口）
+        if ! python3 -m pip install -e "${SKILL_DEST}" &>/dev/null; then
             echo "  ! 警告：无法自动安装 Python 依赖。请手动执行："
-            echo "    python3 -m pip install -r \"${SKILL_DEST}/requirements.txt\""
+            echo "    python3 -m pip install -e \"${SKILL_DEST}\""
         else
-            echo "  ✓ Python 依赖安装完成。"
+            echo "  ✓ Python 依赖安装完成（ai-studio CLI 已注册）"
         fi
     fi
 
