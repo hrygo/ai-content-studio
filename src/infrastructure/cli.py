@@ -1,137 +1,208 @@
 """
-命令行入口
+AI Content Studio - 统一命令行工具
+Clean Architecture 架构，支持 4 个子命令
+
+用法：
+    ai-studio synthesize --source TEXT -o OUTPUT [--engine ENGINE]
+    ai-studio dialogue --source FILE -o OUTPUT [--engine ENGINE]
+    ai-studio studio --topic TEXT -o OUTPUT [--llm LLM] [--tts TTS]
+    ai-studio batch --segments "text1|voice1,text2|voice2" -o OUTPUT [--engine ENGINE]
 """
 import argparse
 import logging
 import sys
 from pathlib import Path
 
-from ..entities import TTSEngineType, EmotionType, AudioFormat, MiniMaxVoiceID
+from ..entities import TTSEngineType, EmotionType, AudioFormat, MiniMaxVoiceID, AudioSegment
 from ..infrastructure.container import Container
-
 
 logger = logging.getLogger(__name__)
 
 
-def main():
-    """CLI 主入口"""
+def _resolve_source(source: str) -> str:
+    """读取文本源（文件路径或直接文本）"""
+    p = Path(source)
+    if p.exists():
+        return p.read_text(encoding="utf-8").strip()
+    return source.strip()
+
+
+def _resolve_roles(roles_path: str | None) -> dict | None:
+    """读取角色音色映射 JSON 文件"""
+    if not roles_path:
+        return None
+    import json
+    return json.loads(Path(roles_path).read_text(encoding="utf-8"))
+
+
+def _resolve_bgm(bgm_path: str | None) -> Path | None:
+    """解析 BGM 路径"""
+    if not bgm_path:
+        return None
+    p = Path(bgm_path)
+    return p if p.exists() else None
+
+
+def cmd_synthesize(args, container: Container) -> int:
+    """synthesize 子命令"""
+    text = _resolve_source(args.source)
+    if not text:
+        logger.error("文本内容为空")
+        return 1
+
+    uc = container.synthesize_speech_use_case(args.engine)
+    result = uc.execute(
+        text=text,
+        output_file=Path(args.output),
+        voice_id=args.voice,
+        speed=args.speed,
+        emotion=args.emotion,
+        audio_format=args.format,
+    )
+    return 0 if result.success else 1
+
+
+def cmd_dialogue(args, container: Container) -> int:
+    """dialogue 子命令"""
+    text = _resolve_source(args.source)
+    if not text:
+        logger.error("对话脚本为空")
+        return 1
+
+    roles = _resolve_roles(args.roles)
+    bgm = _resolve_bgm(args.bgm)
+
+    uc = container.dialogue_speech_use_case(args.engine)
+    result = uc.execute(
+        dialogue_script=text,
+        output_file=Path(args.output),
+        roles_config=roles,
+        bgm_file=bgm,
+    )
+    return 0 if result.success else 1
+
+
+def cmd_studio(args, container: Container) -> int:
+    """studio 子命令"""
+    roles = _resolve_roles(args.roles)
+    bgm = _resolve_bgm(args.bgm)
+
+    uc = container.studio_podcast_use_case(llm=args.llm, tts=args.tts)
+    result = uc.execute(
+        topic=args.topic,
+        output_file=Path(args.output),
+        roles_config=roles,
+        bgm_file=bgm,
+    )
+    return 0 if result.success else 1
+
+
+def cmd_batch(args, container: Container) -> int:
+    """batch 子命令"""
+    # segments 格式: "text1|voice1,text2|voice2,..."
+    segments = []
+    for item in args.segments.split(","):
+        item = item.strip()
+        if not item:
+            continue
+        parts = item.split("|")
+        text = parts[0].strip()
+        voice_id = parts[1].strip() if len(parts) > 1 else "male-qn-qingse"
+        if not text:
+            continue
+        segments.append(AudioSegment(text=text, voice_id=voice_id))
+
+    if not segments:
+        logger.error("片段列表为空")
+        return 1
+
+    uc = container.batch_synthesize_use_case(args.engine)
+    result = uc.execute(segments=segments, output_file=Path(args.output))
+    return 0 if result.success else 1
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """构建 CLI 参数解析器"""
     parser = argparse.ArgumentParser(
-        description="AI 内容工作室 - TTS 语音合成工具",
+        description="AI Content Studio - 专业级 AI 音频内容创作工具",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # 必需参数
-    parser.add_argument(
-        "--source",
-        required=True,
-        help="文本源（文件路径或文本内容）",
+    # ── synthesize ────────────────────────────────────────
+    p = subparsers.add_parser("synthesize", help="单文本 TTS 合成")
+    p.add_argument("--source", required=True, help="文本内容或文件路径")
+    p.add_argument("-o", "--output", required=True, help="输出音频文件")
+    p.add_argument("--engine", default="minimax",
+                   choices=["minimax", "qwen_tts", "qwen_omni", "qwen"])
+    p.add_argument("--voice", default="male-qn-qingse", help="音色 ID")
+    p.add_argument("--speed", type=float, default=1.0, help="语速 0.5-2.0")
+    p.add_argument("--emotion", default="neutral",
+                   help="情感 neutral/happy/sad/angry/calm/surprised/fearful/disgusted/fluent")
+    p.add_argument("--format", default="mp3", choices=["mp3", "wav"], help="音频格式")
+    p.set_defaults(func=cmd_synthesize)
+
+    # ── dialogue ────────────────────────────────────────────
+    p = subparsers.add_parser("dialogue", help="对话脚本解析 + 多角色 TTS")
+    p.add_argument("--source", required=True, help="对话脚本文件路径")
+    p.add_argument("-o", "--output", required=True, help="输出音频文件")
+    p.add_argument("--engine", default="minimax",
+                   choices=["minimax", "qwen_tts", "qwen_omni", "qwen"])
+    p.add_argument("--roles", help="角色音色映射 JSON 文件")
+    p.add_argument("--bgm", help="背景音乐文件")
+    p.set_defaults(func=cmd_dialogue)
+
+    # ── studio ──────────────────────────────────────────────
+    p = subparsers.add_parser("studio", help="LLM 生成 + TTS 全流程播客")
+    p.add_argument("--topic", required=True, help="播客主题")
+    p.add_argument("-o", "--output", required=True, help="输出音频文件")
+    p.add_argument("--llm", default="minimax", choices=["minimax", "qwen"],
+                   help="LLM 引擎（生成脚本）")
+    p.add_argument("--tts", default="minimax",
+                   choices=["minimax", "qwen_tts", "qwen_omni", "qwen"],
+                   help="TTS 引擎（语音合成）")
+    p.add_argument("--roles", help="角色音色映射 JSON 文件")
+    p.add_argument("--bgm", help="背景音乐文件")
+    p.set_defaults(func=cmd_studio)
+
+    # ── batch ───────────────────────────────────────────────
+    p = subparsers.add_parser("batch", help="批量片段 TTS + 合并")
+    p.add_argument("--segments", required=True,
+                   help="片段列表，格式: 'text1|voice1,text2|voice2,...'")
+    p.add_argument("-o", "--output", required=True, help="输出音频文件")
+    p.add_argument("--engine", default="minimax",
+                   choices=["minimax", "qwen_tts", "qwen_omni", "qwen"])
+    p.set_defaults(func=cmd_batch)
+
+    return parser
+
+
+def main():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
     )
 
-    parser.add_argument(
-        "-o",
-        "--output",
-        required=True,
-        help="输出音频文件路径",
-    )
-
-    # 可选参数
-    parser.add_argument(
-        "--engine",
-        choices=[e.value for e in TTSEngineType],
-        default=TTSEngineType.MINIMAX.value,
-        help=f"TTS 引擎类型（默认: {TTSEngineType.MINIMAX.value}）",
-    )
-
-    parser.add_argument(
-        "--voice",
-        default=MiniMaxVoiceID.MALE_QN_QINGSE.value,
-        help=f"音色 ID（默认: {MiniMaxVoiceID.MALE_QN_QINGSE.value}）",
-    )
-
-    parser.add_argument(
-        "--speed",
-        type=float,
-        default=1.0,
-        help="语速 0.5-2.0（默认: 1.0）",
-    )
-
-    parser.add_argument(
-        "--emotion",
-        choices=[e.value for e in EmotionType],
-        default=EmotionType.NEUTRAL.value,
-        help=f"情感类型（默认: {EmotionType.NEUTRAL.value}）",
-    )
-
-    parser.add_argument(
-        "--format",
-        choices=[f.value for f in AudioFormat],
-        default=AudioFormat.MP3.value,
-        help=f"音频格式（默认: {AudioFormat.MP3.value}）",
-    )
-
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="显示详细日志",
-    )
-
+    parser = build_parser()
     args = parser.parse_args()
 
-    # 配置日志
-    logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
+    try:
+        container = Container.from_env()
+    except Exception as e:
+        logger.error(f"容器初始化失败: {e}")
+        sys.exit(1)
 
     try:
-        # 1. 初始化容器
-        container = Container.from_env()
-
-        # 2. 读取文本
-        source_path = Path(args.source)
-        if source_path.exists():
-            text = source_path.read_text(encoding="utf-8").strip()
-        else:
-            text = args.source.strip()
-
-        if not text:
-            logger.error("文本内容为空")
-            sys.exit(1)
-
-        # 3. 执行合成
-        output_file = Path(args.output)
-        use_case = container.synthesize_speech_use_case(args.engine)
-
-        result = use_case.execute(
-            text=text,
-            output_file=output_file,
-            voice_id=args.voice,
-            speed=args.speed,
-            emotion=args.emotion,
-            audio_format=args.format,
-        )
-
-        # 4. 输出结果
-        if result.success:
-            logger.info(f"✅ 合成成功: {result.file_path}")
-            logger.info(f"⏱️  音频时长: {result.duration:.2f} 秒")
-            sys.exit(0)
-        else:
-            logger.error(f"❌ 合成失败: {result.error_message}")
-            sys.exit(1)
-
+        exit_code = args.func(args, container)
+        sys.exit(exit_code)
     except KeyboardInterrupt:
         logger.info("用户中断")
         sys.exit(130)
-
     except Exception as e:
-        logger.exception(f"未预期的错误: {e}")
+        logger.exception(f"错误: {e}")
         sys.exit(1)
-
     finally:
-        # 清理资源
-        if "container" in locals():
-            container.cleanup()
+        container.cleanup()
 
 
 if __name__ == "__main__":
