@@ -15,6 +15,13 @@ import time
 import logging
 from pathlib import Path
 
+import audio_utils
+from audio_utils import (
+    get_duration, run_ffmpeg, split_text, parse_dialogue_text,
+    stream_qwen_omni_events, make_wav_header, compute_role_pan_values,
+)
+from config_utils import load_api_config
+
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.panel import Panel
@@ -34,35 +41,6 @@ stats = {
     "total_duration": 0.0,
     "errors": 0
 }
-
-
-def get_config_path():
-    """固定指向 ~/.config/opencode/opencode.json 配置文件"""
-    return os.path.expanduser("~/.config/opencode/opencode.json")
-
-
-def load_api_config():
-    """
-    获取 DashScope (Bailian) API 配置
-    优先级：1. 环境变量 2. opencode.json
-    """
-    api_key = os.environ.get("DASHSCOPE_API_KEY")
-    api_url = os.environ.get("DASHSCOPE_BASE_URL") or "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    config_path = get_config_path()
-    try:
-        if os.path.exists(config_path):
-            with open(config_path, "r") as f:
-                config = json.load(f)
-                bailian = config.get("provider", {}).get("bailian", {}).get("options", {})
-                if not api_key or api_key == os.environ.get("DASHSCOPE_API_KEY"):
-                    # 如果环境中的 key 不对或者还没设，优先用配置文件的
-                    api_key = bailian.get("apiKey") or api_key
-                if not api_url or api_url == "https://dashscope.aliyuncs.com/compatible-mode/v1":
-                    api_url = bailian.get("baseURL") or api_url
-    except Exception as e:
-        logger.error(f"从配置文件读取配置失败: {e}")
-    
-    return api_key, api_url.rstrip("/")
 
 
 @retry(
@@ -135,31 +113,9 @@ def text_to_speech_qwen(text, output_file=None, voice="cherry", model="qwen3-omn
                 console.print(f"[red]✗ API 请求失败 ({resp.status_code}): {resp.text[:200]}[/red]")
                 resp.raise_for_status()
 
-            for line in resp.iter_lines():
-                if not line or line.startswith(b":") or line.strip() == b"data: [DONE]":
-                    continue
-                if not line.startswith(b"data: "):
-                    continue
-
-                data_str = line.decode("utf-8")[6:].strip()
-                if not data_str or data_str == "[DONE]":
-                    continue
-
-                try:
-                    chunk = json.loads(data_str)
-                except json.JSONDecodeError:
-                    continue
-
-                choices = chunk.get("choices")
-                if not choices:
-                    continue
-                delta = choices[0].get("delta", {})
-
-                # 收集文本
+            for delta in stream_qwen_omni_events(resp):
                 if delta.get("content"):
                     response_text += delta["content"]
-
-                # 收集音频 base64 数据
                 audio_obj = delta.get("audio")
                 if audio_obj and isinstance(audio_obj, dict) and audio_obj.get("data"):
                     audio_chunks.append(audio_obj["data"])
@@ -191,7 +147,6 @@ def text_to_speech_qwen(text, output_file=None, voice="cherry", model="qwen3-omn
                     capture_output=True, check=True
                 )
                 wav_path.unlink(missing_ok=True)
-                out_path = out_path
             else:
                 with open(out_path, "wb") as f:
                     f.write(audio_bytes)
@@ -208,212 +163,21 @@ def text_to_speech_qwen(text, output_file=None, voice="cherry", model="qwen3-omn
         raise
 
 
-def get_duration(file_path):
-    """获取音频文件时长 (秒)"""
-    abs_path = os.path.abspath(file_path)
-    cmd = [
-        "ffprobe", "-v", "error",
-        "-show_entries", "format=duration",
-        "-of", "default=noprint_wrappers=1:nokey=1",
-        abs_path
-    ]
-    try:
-        output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode().strip()
-        return float(output)
-    except Exception as e:
-        return 0.0
-
-
-def run_ffmpeg(cmd_list, log_file):
-    """安全执行 FFmpeg 命令"""
-    try:
-        with open(log_file, "w") as f:
-            result = subprocess.run(
-                cmd_list,
-                stdout=f,
-                stderr=subprocess.STDOUT,
-                check=True
-            )
-        return result.returncode == 0
-    except subprocess.CalledProcessError:
-        return False
-
-
 def merge_audio_files(file_list, output_file, pan_list=None, bgm_file=None):
-    """音频混音引擎 (复用 Minimax 逻辑)"""
-    if not file_list:
-        return False
-
-    work_dir = Path(__file__).parent / "work_qwen"
-    work_dir.mkdir(exist_ok=True)
-
+    """qwen 混音：委托 audio_utils，参数为 24kHz / work_qwen / 基于输出文件格式"""
+    from pathlib import Path as _Path
     console.print(f"[cyan]→ 混音引擎启动，处理 {len(file_list)} 个音频片段...[/cyan]")
-
-    processed_list = []
-    if pan_list and len(pan_list) == len(file_list):
-        for i, (f, balance) in enumerate(zip(file_list, pan_list)):
-            if balance == 0:
-                processed_list.append(f)
-                continue
-            l_vol = 1.0 if balance <= 0 else max(0.1, 1.0 - balance)
-            r_vol = 1.0 if balance >= 0 else max(0.1, 1.0 + balance)
-            panned_temp = work_dir / f"panned_{i}.wav"
-            cmd = [
-                "ffmpeg", "-y", "-i", f,
-                "-af", f"pan=stereo|c0={l_vol:.1f}*c0|c1={r_vol:.1f}*c0",
-                str(panned_temp)
-            ]
-            subprocess.run(cmd, capture_output=True)
-            processed_list.append(str(panned_temp))
-    else:
-        processed_list = file_list
-
-    inputs = []
-    filter_parts = []
-    current_time_ms = 0
-
-    for i, f in enumerate(processed_list):
-        inputs.extend(["-i", f])
-        overlap_ms = 150 if i > 0 else 0
-        delay = max(0, current_time_ms - overlap_ms)
-        filter_parts.append(f"[{i}:a]adelay={delay}|{delay}[a{i}];")
-        duration = get_duration(f)
-        current_time_ms += int(duration * 1000)
-
-    amix_inputs = "".join([f"[a{i}]" for i in range(len(processed_list))])
-    master_v = f"{amix_inputs}amix=inputs={len(processed_list)}:duration=first,"
-    master_v += "acompressor=threshold=-15dB:ratio=4:attack=5:release=50,"
-    master_v += "alimiter=limit=-1.0dB,"
-    master_v += "loudnorm=I=-16:TP=-1.5:LRA=11"
-
-    filter_parts.append(f"{master_v}[mixed_voice];")
-
-    if bgm_file and os.path.exists(bgm_file):
-        inputs.extend(["-i", bgm_file])
-        bgm_idx = len(processed_list)
-        filter_parts.append(
-            f"[{bgm_idx}:a]volume=0.15,acompressor=threshold=-40dB:ratio=20:attack=5:release=200[bgm_ducked];"
-            f"[mixed_voice][bgm_ducked]amix=inputs=2:duration=first[out]"
-        )
-    else:
-        filter_parts.append("[mixed_voice]volume=1.0[out]")
-
-    filter_complex = "".join(filter_parts)
-
-    out_path = Path(output_file)
-    is_mp3 = out_path.suffix.lower() == ".mp3"
-    final_output = output_file
-    if is_mp3:
-        # 混音阶段统一输出 WAV，再统一转换
-        final_output = str(work_dir / "merged_output.wav")
-
-    cmd = ["ffmpeg", "-y"]
-    cmd.extend(inputs)
-    cmd.extend([
-        "-filter_complex", filter_complex,
-        "-map", "[out]",
-        "-ac", "2",
-        "-ab", "128k",
-        final_output
-    ])
-
-    ffmpeg_log = work_dir / "ffmpeg_log.txt"
-    success = run_ffmpeg(cmd, str(ffmpeg_log))
-
-    if not success:
-        console.print("[red]✗ FFmpeg 混音失败！[/red]")
-        return False
-
-    # MP3 转换
-    if is_mp3:
-        subprocess.run(
-            ["ffmpeg", "-y", "-i", final_output,
-             "-codec:a", "libmp3lame", "-b:a", "128k", output_file],
-            capture_output=True, check=True
-        )
-        Path(final_output).unlink(missing_ok=True)
-
-    stats["total_duration"] = get_duration(output_file)
-    return True
-
-
-def split_text(text, max_len=300):
-    """智能文本切分"""
-    if len(text) <= max_len:
-        return [text]
-    delimiters = ["。", "！", "？", "；", ".", "!", "?", ";", "\n"]
-    chunks = []
-    current_chunk = ""
-    for char in text:
-        current_chunk += char
-        if char in delimiters and len(current_chunk) >= max_len * 0.6:
-            chunks.append(current_chunk.strip())
-            current_chunk = ""
-    if current_chunk:
-        chunks.append(current_chunk.strip())
-    final_chunks = []
-    for c in chunks:
-        if len(c) > max_len:
-            for i in range(0, len(c), max_len):
-                final_chunks.append(c[i:i+max_len])
-        else:
-            final_chunks.append(c)
-    return final_chunks
-
-
-def make_wav_header(num_samples, sample_rate=24000, num_channels=1, bits_per_sample=16):
-    """构造 PCM 数据的 WAV header"""
-    byte_rate = sample_rate * num_channels * bits_per_sample // 8
-    block_align = num_channels * bits_per_sample // 8
-    data_size = num_samples * block_align
-
-    import struct
-    header = struct.pack(
-        "<4sI4s4sIHHIIHH4sI",
-        b"RIFF",
-        36 + data_size,
-        b"WAVE",
-        b"fmt ",
-        16,          # fmt chunk size
-        1,           # audio format (PCM)
-        num_channels,
-        sample_rate,
-        byte_rate,
-        block_align,
-        bits_per_sample,
-        b"data",
-        data_size,
+    suffix = _Path(output_file).suffix.lower()
+    ok = audio_utils.merge_audio_files(
+        file_list, output_file, pan_list=pan_list, bgm_file=bgm_file,
+        sample_rate=24000, work_dir_name="work_qwen", output_suffix=suffix
     )
-    return header
+    if ok:
+        stats["total_duration"] = get_duration(output_file)
+    return ok
 
 
-def parse_dialogue_text(file_path):
-    """解析对话格式文本"""
-    import re
-    segments = []
-    # 匹配格式: [角色, 情感]: 内容
-    pattern = re.compile(r"\[(.*?)(?:,\s*(.*?))?\]:\s*(.*)")
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                match = pattern.match(line)
-                if match:
-                    segments.append({
-                        "role": match.group(1).strip(),
-                        "emotion": match.group(2).strip() if match.group(2) else "neutral",
-                        "text": match.group(3).strip()
-                    })
-                else:
-                    segments.append({"text": line, "role": "Narrator"})
-    except Exception as e:
-        logger.error(f"解析对话文本失败: {e}")
-    return segments
-
-
-def process_segments(segments, output_file, roles, use_stereo=False, turn_pause=0.2,
+def process_segments(segments, output_file, roles, use_stereo=False,
                      api_key=None, api_url=None, bgm_file=None):
     """处理多人对话片段"""
     if not segments:
@@ -425,14 +189,7 @@ def process_segments(segments, output_file, roles, use_stereo=False, turn_pause=
     temp_files = []
     pan_list = []
 
-    role_to_pan = {}
-    if use_stereo:
-        unique_roles = list(roles.keys())
-        for i, role in enumerate(unique_roles):
-            if len(unique_roles) == 1:
-                role_to_pan[role] = 0
-            else:
-                role_to_pan[role] = -0.8 + (1.6 * i / (len(unique_roles)-1))
+    role_to_pan = compute_role_pan_values(list(roles.keys())) if use_stereo else {}
 
     total_segs = len(segments)
 
@@ -460,9 +217,8 @@ def process_segments(segments, output_file, roles, use_stereo=False, turn_pause=
             if role_data.get("personality"):
                 role_prompt = role_data["personality"] + " " + role_prompt
             
-            # 处理正文分段
             sub_chunks = split_text(text)
-            for j, chunk in enumerate(sub_chunks):
+            for chunk in sub_chunks:
                 # 缓存键：文本 + 声音 + 情感 + 角色描述
                 seg_key = f"qwen_{voice}_{chunk}_{emotion}_{role_label}".encode()
                 seg_hash = hashlib.sha256(seg_key).hexdigest()[:16]
@@ -483,7 +239,7 @@ def process_segments(segments, output_file, roles, use_stereo=False, turn_pause=
                         console.print(f"[red]✗ 分片合成失败[/red]")
                         return False
 
-                pan_val = role_to_pan.get(role_label, 0) if use_stereo else 0
+                pan_val = role_to_pan.get(role_label, 0)
                 pan_list.append(pan_val)
 
             progress.advance(task)

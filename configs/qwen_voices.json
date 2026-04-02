@@ -1,0 +1,218 @@
+{
+    "_meta": {
+        "model": "qwen3-tts-flash",
+        "source": "阿里云百炼 qwen3-tts-flash 官方音色列表",
+        "voices_count": 49,
+        "dialects": ["dianjing", "东北话", "粤语", "河南话", "陕西话", " "],
+        "note": "音色可用性由账户等级决定，实际以 API 响应为准"
+    },
+
+    "_voice_categories": {
+        "zh_xiannv": {
+            "label": "中文-仙女音",
+            "voices": ["nannuann", "aurora", "vera", "bella", "luna", "maria", "natalie", "nicole", "rachel"]
+        },
+        "zh_zhengzhi": {
+            "label": "中文-知性音",
+            "voices": ["ada", "alice", "emily", "hannah", "lily", "ruby", "coco"]
+        },
+        "zh_cixing": {
+            "label": "中文-磁性音",
+            "voices": ["terry", "harry", "andy", "anthony"]
+        },
+        "zh_shaonv": {
+            "label": "中文-少女音",
+            "voices": ["amy", "daisy", "sandy", "sally", "tinas", "yessa"]
+        },
+        "zh_gaoshao": {
+            "label": "中文-高傲少妇",
+            "voices": ["clara", "sara", "susan", "linda", "lisa"]
+        },
+        "zh_dialect": {
+            "label": "中文-方言",
+            "voices": ["dylan", "jada", "sunny"]
+        },
+        "en_female": {
+            "label": "English-Female",
+            "voices": ["emma", "sophia", "amy", "charlotte"]
+        },
+        "en_male": {
+            "label": "English-Male",
+            "voices": ["eric", "andy"]
+        }
+    },
+
+    "roles": {
+        "Aurora": {
+            "voice": "aurora",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "年轻女性，清亮活泼"
+        },
+        "Nanny": {
+            "voice": "nannuann",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "年轻女性，温柔细腻"
+        },
+        "Clara": {
+            "voice": "clara",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "年轻女性，专业知性"
+        },
+        "Terry": {
+            "voice": "terry",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "中年男性，磁性低沉"
+        },
+        "Harry": {
+            "voice": "harry",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "年轻男性，磁性阳光"
+        },
+        "Eric": {
+            "voice": "eric",
+            "language": "英文",
+            "speed": 1.0,
+            "description": "英语男性，成熟稳重"
+        },
+        "Emma": {
+            "voice": "emma",
+            "language": "英文",
+            "speed": 1.0,
+            "description": "英语女性，自然亲切"
+        },
+        "Dylan": {
+            "voice": "dylan",
+            "language": "北京话",
+            "speed": 1.0,
+            "description": "北京话男性，地道方言"
+        },
+        "Jada": {
+            "voice": "jada",
+            "language": "上海话",
+            "speed": 1.0,
+            "description": "上海话女性，软糯吴语"
+        },
+        "Sunny": {
+            "voice": "sunny",
+            "language": "四川话",
+            "speed": 1.0,
+            "description": "四川话，诙谐幽默"
+        },
+        "Ada": {
+            "voice": "ada",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "知性女性，专业播报"
+        },
+        "Alice": {
+            "voice": "alice",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "优雅女性，温柔流畅"
+        },
+        "Emily": {
+            "voice": "emily",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "自然女性，清晰流畅"
+        },
+        "Hannah": {
+            "voice": "hannah",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "活泼女性，俏皮可爱"
+        },
+        "Cherry": {
+            "voice": "cherry",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "甜美女性，温柔亲切"
+        },
+        "Vera": {
+            "voice": "vera",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "成熟女性，温婉大方"
+        },
+        "Bella": {
+            "voice": "bella",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "甜美女性，柔和细腻"
+        },
+        "Lily": {
+            "voice": "lily",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "清新女性，柔和自然"
+        },
+        "Ruby": {
+            "voice": "ruby",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "活泼女性，明快清晰"
+        },
+        "Coco": {
+            "voice": "coco",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "可爱女性，活泼俏皮"
+        },
+        "Andy": {
+            "voice": "andy",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "阳光男性，活力充沛"
+        },
+        "Amy": {
+            "voice": "amy",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "少女音色，清脆可爱"
+        },
+        "Daisy": {
+            "voice": "daisy",
+            "language": "中文",
+            "speed": 1.0,
+            "description": "少女音色，明快活泼"
+        },
+        "Sophia": {
+            "voice": "sophia",
+            "language": "英文",
+            "speed": 1.0,
+            "description": "英语女性，优雅知性"
+        }
+    },
+
+    "role_defaults": {
+        "主持人": "cherry",
+        "主播": "cherry",
+        "Narrator": "cherry",
+        "讲解员": "cherry",
+        "Expert": "cherry",
+        "专家": "ethan",
+        "Proponent": "cherry",
+        "Opponent": "ethan",
+        "乐观派": "cherry",
+        "怀疑论者": "ethan",
+        "支持者": "cherry",
+        "反对者": "ethan",
+        "Moderator": "cherry",
+        "辩手A": "cherry",
+        "辩手B": "ethan",
+        "中性": "cherry"
+    },
+
+    "voice_pool": [
+        "cherry", "ethan", "chelsie",
+        "aurora", "nannuann", "clara", "terry", "harry", "eric", "emma",
+        "ada", "alice", "emily", "hannah", "vera", "bella",
+        "luna", "lily", "ruby", "coco", "andy", "amy", "daisy",
+        "sophia", "dylan", "jada", "sunny"
+    ]
+}

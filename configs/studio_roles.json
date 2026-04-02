@@ -1,35 +1,342 @@
 {
+    "_meta": {
+        "version": "2.0",
+        "description": "AI Content Studio 角色库 V2.0 — 覆盖播客/播报/教育/辩论/儿童/英文全场景，演示 T2A V2 全部高级参数",
+        "usage": "在 content_studio.py 或 orchestrator 中通过 --roles 指定此文件，角色名需与脚本中 [role] 标签匹配",
+        "parameter_priority": "segment(台词级) > role(角色库) > global(命令行默认值)，高级参数（english_normalization / latex_read / language_boost / pronunciation_dict / voice_modify）仅 speech-2.8-hd/turbo 支持"
+    },
+
+    "_role_groups": {
+        "podcast": "播客对话（deep_dive / debate 模式）",
+        "narration": "播报叙述（summary 模式）",
+        "educational": "教育培训",
+        "childrens": "儿童内容",
+        "english": "英文国际内容",
+        "special": "特殊音效 / 演示高级参数"
+    },
+
     "Alex": {
         "voice_id": "male-qn-qingse",
         "speed": 1.1,
-        "pitch": 2
+        "pitch": 2,
+        "emotion": "happy",
+        "group": "podcast",
+        "description": "青年男性，清亮活泼，适合主播发起话题"
     },
     "Sam": {
         "voice_id": "female-yujie",
         "speed": 1.0,
-        "pitch": 0
+        "pitch": 0,
+        "emotion": "calm",
+        "group": "podcast",
+        "description": "青年女性，专业知性，适合接话题并深入分析"
     },
+    "Jordan": {
+        "voice_id": "female-tianmei",
+        "speed": 1.05,
+        "pitch": 3,
+        "emotion": "happy",
+        "group": "podcast",
+        "description": "青年女性，甜美柔和，适合补充轻松观点或趣闻轶事"
+    },
+    "Casey": {
+        "voice_id": "male-qn-K",
+        "speed": 0.95,
+        "pitch": -3,
+        "emotion": "calm",
+        "group": "podcast",
+        "description": "中年男性，沉稳磁性，适合总结性发言或转折话题"
+    },
+
     "Narrator": {
         "voice_id": "female-yujie",
         "speed": 1.05,
-        "emotion": "neutral"
+        "pitch": 0,
+        "emotion": "neutral",
+        "group": "narration",
+        "description": "标准旁白，专业播报，适用于 summary 模式开篇和转场"
     },
-    "Expert": {
+    "NewsAnchor": {
+        "voice_id": "male-qn-K",
+        "speed": 0.92,
+        "pitch": -2,
+        "emotion": "calm",
+        "group": "narration",
+        "description": "新闻主播，低沉磁性，语速稳健，适合正式简报"
+    },
+    "DocumentaryHost": {
         "voice_id": "male-qn-qingse",
         "speed": 0.95,
         "pitch": -1,
-        "emotion": "calm"
+        "emotion": "calm",
+        "english_normalization": true,
+        "group": "narration",
+        "description": "纪录片主持，中速沉稳，英文数字规范化（学术/数据内容）"
     },
+    "SportsCommentator": {
+        "voice_id": "male-qn-qingse",
+        "speed": 1.2,
+        "pitch": 5,
+        "emotion": "happy",
+        "group": "narration",
+        "description": "体育解说，明快高亢，语速快，音调偏高"
+    },
+    "FinanceAnchor": {
+        "voice_id": "female-yujie",
+        "speed": 0.95,
+        "pitch": 0,
+        "emotion": "calm",
+        "english_normalization": true,
+        "language_boost": "English",
+        "group": "narration",
+        "description": "财经主播，专业平稳，语种优先识别英文（处理中英混杂术语）"
+    },
+
+    "Professor": {
+        "voice_id": "male-qn-K",
+        "speed": 0.9,
+        "pitch": -2,
+        "emotion": "calm",
+        "group": "educational",
+        "description": "大学教授，沉稳权威，语速偏慢，适合深度知识讲解"
+    },
+    "ScienceExplainer": {
+        "voice_id": "female-yujie",
+        "speed": 1.0,
+        "pitch": 2,
+        "emotion": "happy",
+        "language_boost": "Chinese",
+        "group": "educational",
+        "description": "科学讲解员，清晰有活力，语种优先中文，适合科普内容"
+    },
+    "MathTeacher": {
+        "voice_id": "male-qn-qingse",
+        "speed": 0.95,
+        "pitch": 0,
+        "emotion": "calm",
+        "latex_read": true,
+        "group": "educational",
+        "description": "数学教师，中速清晰，latex_read=true，公式用 $$ 包裹，示例：\"二次方程 $$ax^2 + bx + c = 0$$ 的求根公式是...\""
+    },
+    "HistoryNarrator": {
+        "voice_id": "male-qn-K",
+        "speed": 0.92,
+        "pitch": -3,
+        "emotion": "calm",
+        "group": "educational",
+        "description": "历史讲述者，厚重磁性，语速舒缓，适合历史故事"
+    },
+    "TechTrainer": {
+        "voice_id": "female-tianmei",
+        "speed": 1.05,
+        "pitch": 2,
+        "emotion": "happy",
+        "language_boost": "Chinese",
+        "group": "educational",
+        "description": "技术培训师，温和亲切，语速稍快，适合教程和上手指南"
+    },
+
+    "Storyteller": {
+        "voice_id": "female-tianmei_v2",
+        "speed": 1.1,
+        "pitch": 4,
+        "emotion": "happy",
+        "group": "childrens",
+        "description": "故事姐姐，甜美柔和，语速快，音调偏高，适合儿童故事"
+    },
+    "FriendlyMonster": {
+        "voice_id": "male-qn-qingse",
+        "speed": 1.15,
+        "pitch": 6,
+        "emotion": "surprised",
+        "group": "childrens",
+        "description": "可爱怪兽，活泼夸张，音调很高，适合儿童科普对话"
+    },
+    "WiseGrandpa": {
+        "voice_id": "male-qn-K",
+        "speed": 0.88,
+        "pitch": -4,
+        "emotion": "calm",
+        "group": "childrens",
+        "description": "智慧老爷爷，深沉温和，语速很慢，适合睡前故事"
+    },
+    "FunKid": {
+        "voice_id": "female-tianmei",
+        "speed": 1.2,
+        "pitch": 5,
+        "emotion": "happy",
+        "group": "childrens",
+        "description": "活泼小朋友，元气满满，语速快，音调高，适合问答互动"
+    },
+
     "Proponent": {
         "voice_id": "male-qn-qingse",
         "speed": 1.1,
-        "pitch": 1,
-        "emotion": "neutral"
+        "pitch": 2,
+        "emotion": "happy",
+        "group": "podcast",
+        "description": "辩论正方，明快有力，适合发起论点和维护立场"
     },
     "Opponent": {
         "voice_id": "female-yujie",
         "speed": 1.05,
         "pitch": 1,
-        "emotion": "neutral"
+        "emotion": "calm",
+        "group": "podcast",
+        "description": "辩论反方，冷静条理，适合提出质疑和反驳"
+    },
+    "Moderator": {
+        "voice_id": "male-qn-K",
+        "speed": 0.95,
+        "pitch": -1,
+        "emotion": "neutral",
+        "group": "podcast",
+        "description": "辩论主持人，沉稳中立，引导节奏和总结交锋"
+    },
+    "Advocate": {
+        "voice_id": "male-qn-qingse",
+        "speed": 1.15,
+        "pitch": 3,
+        "emotion": "angry",
+        "group": "podcast",
+        "description": "激进倡导者，高亢有力，emotion=angry，适合激情辩论"
+    },
+    "DevilsAdvocate": {
+        "voice_id": "female-yujie",
+        "speed": 0.98,
+        "pitch": 0,
+        "emotion": "sad",
+        "group": "podcast",
+        "description": "唱反调者，低沉谨慎，emotion=sad，引导反思性讨论"
+    },
+
+    "TechCritic": {
+        "voice_id": "male-qn-K",
+        "speed": 1.0,
+        "pitch": -2,
+        "emotion": "calm",
+        "group": "narration",
+        "description": "科技评论员，挑剔专业，语速稳健，适合产品评测"
+    },
+    "HypeReviewer": {
+        "voice_id": "female-tianmei",
+        "speed": 1.1,
+        "pitch": 4,
+        "emotion": "happy",
+        "group": "narration",
+        "description": "热情评测员，元气种草，语速快音调高，适合好物推荐"
+    },
+    "SnarkyCritic": {
+        "voice_id": "male-qn-qingse",
+        "speed": 1.0,
+        "pitch": 2,
+        "emotion": "angry",
+        "group": "narration",
+        "description": "毒舌评论家，讽刺有力，emotion=angry，适合缺点吐槽"
+    },
+
+    "EnglishNarrator": {
+        "voice_id": "English_expressive_narrator",
+        "speed": 1.0,
+        "pitch": 0,
+        "emotion": "neutral",
+        "english_normalization": true,
+        "group": "english",
+        "description": "英文旁白，叙事感强，英文数字规范化"
+    },
+    "BritishHost": {
+        "voice_id": "English_British_Man",
+        "speed": 0.95,
+        "pitch": 0,
+        "emotion": "calm",
+        "group": "english",
+        "description": "英式主持人，沉稳优雅，适合高端访谈或纪录片"
+    },
+    "AussieGuide": {
+        "voice_id": "English_Aussie_Man",
+        "speed": 1.05,
+        "pitch": 2,
+        "emotion": "happy",
+        "group": "english",
+        "description": "澳式导游，友好随和，适合旅行/生活类英文内容"
+    },
+    "ElegantLady": {
+        "voice_id": "English_Graceful_Lady",
+        "speed": 0.95,
+        "pitch": 2,
+        "emotion": "calm",
+        "group": "english",
+        "description": "优雅女士，专业演示，适合商务/教育英文内容"
+    },
+
+    "GhostVoice": {
+        "voice_id": "female-tianmei_v2",
+        "speed": 0.9,
+        "pitch": -4,
+        "emotion": "calm",
+        "voice_modify": {
+            "pitch": 0,
+            "intensity": 0,
+            "timbre": 0,
+            "sound_effects": "spacious_echo"
+        },
+        "group": "special",
+        "description": "幽灵音效，空旷回声，voice_modify.sound_effects=spacious_echo，适合恐怖故事或神秘旁白"
+    },
+    "RadioVoice": {
+        "voice_id": "male-qn-K",
+        "speed": 0.95,
+        "pitch": -2,
+        "emotion": "calm",
+        "voice_modify": {
+            "pitch": 0,
+            "intensity": 0,
+            "timbre": 0,
+            "sound_effects": "radio"
+        },
+        "group": "special",
+        "description": "电台音效，voice_modify.sound_effects=radio，适合复古风格内容"
+    },
+    "DeepOracle": {
+        "voice_id": "male-qn-K",
+        "speed": 0.85,
+        "pitch": -5,
+        "emotion": "calm",
+        "voice_modify": {
+            "pitch": -8,
+            "intensity": -5,
+            "timbre": -3,
+            "sound_effects": "room_reverb"
+        },
+        "group": "special",
+        "description": "深渊先知，极低沉 + room_reverb，pitch=-5 叠加 voice_modify.pitch=-8，适合悬念/神秘场景"
+    },
+    "PronunciationDemo": {
+        "voice_id": "male-qn-qingse",
+        "speed": 1.0,
+        "pitch": 0,
+        "emotion": "neutral",
+        "pronunciation_dict": {
+            "tone": ["AI/Artificial Intelligence", "LLM/Large Language Model", "API/Application Programming Interface"]
+        },
+        "group": "special",
+        "description": "专业读音演示，pronunciation_dict 自定义 AI→Artificial Intelligence 等行业术语读法，适合技术播客"
+    },
+
+    "Audience": {
+        "voice_id": "female-tianmei",
+        "speed": 1.0,
+        "pitch": 0,
+        "emotion": "happy",
+        "group": "podcast",
+        "description": "观众反应声（混音用，可与 BGM 叠加作为背景音）"
+    },
+    "Guest": {
+        "voice_id": "male-qn-K",
+        "speed": 0.95,
+        "pitch": -1,
+        "emotion": "calm",
+        "group": "podcast",
+        "description": "受访嘉宾，沉稳专业，适合访谈节目"
     }
 }

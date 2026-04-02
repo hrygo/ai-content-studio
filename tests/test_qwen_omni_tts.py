@@ -210,7 +210,6 @@ def test_scene2_blog_podcast():
         output_file=out,
         roles=roles,
         use_stereo=True,
-        turn_pause=0.4,
         api_key=key,
         api_url=url,
     )
@@ -300,7 +299,6 @@ def test_scene4_blog_with_bgm():
         output_file=out,
         roles=roles,
         use_stereo=False,
-        turn_pause=0.3,
         api_key=key,
         api_url=url,
         bgm_file=bgm,

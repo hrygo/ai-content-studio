@@ -1,0 +1,171 @@
+{
+    "_meta": {
+        "model_family": "T2A V2 (speech-2.8-hd / speech-2.6-hd / speech-02-hd / speech-01-hd)",
+        "api_doc": "https://platform.minimax.io/docs/api-reference/speech-t2a-http",
+        "voice_source": "MiniMax 官方音色（系统音色 + AI 生成音色），完整列表请调用音色查询 API",
+        "note": "音色 ID 以 API 返回为准，speech-2.6+ 系列音色命名格式不同于 speech-2.8-hd"
+    },
+
+    "_parameter_guide": {
+        "voice_id": {
+            "description": "音色 ID，标识具体音色",
+            "examples": ["male-qn-qingse", "female-yujie", "English_expressive_narrator"]
+        },
+        "speed": {
+            "description": "语速倍率",
+            "range": [0.5, 2.0],
+            "default": 1.0,
+            "examples": {"慢速叙述": 0.85, "标准播报": 1.0, "快速节奏": 1.2, "倍速摘要": 1.5}
+        },
+        "pitch": {
+            "description": "音调调整（半音程）",
+            "range": [-12, 12],
+            "examples": {"低沉磁性": -3, "标准": 0, "明亮活泼": 3}
+        },
+        "vol": {
+            "description": "音量",
+            "range": "(0, 10]",
+            "default": 1.0
+        },
+        "emotion": {
+            "description": "情感控制（仅 speech-2.8-hd/turbo 支持）",
+            "options": ["happy", "sad", "angry", "fearful", "disgusted", "surprised", "calm", "fluent"],
+            "note": "空值由模型自动选择"
+        },
+        "english_normalization": {
+            "description": "英文数字规范化（改善英文数字朗读，略微增加延迟）",
+            "default": false
+        },
+        "latex_read": {
+            "description": "LaTeX 公式朗读（需用 $$ 包裹公式，backlash 需转义）",
+            "default": false
+        },
+        "language_boost": {
+            "description": "语种增强，优先识别指定语言/方言",
+            "options": [
+                "Chinese", "Chinese,Yue", "English", "Arabic", "Russian", "Spanish",
+                "French", "Portuguese", "German", "Turkish", "Dutch", "Ukrainian",
+                "Vietnamese", "Indonesian", "Japanese", "Italian", "Korean", "Thai",
+                "Polish", "Romanian", "Greek", "Czech", "Finnish", "Hindi",
+                "Bulgarian", "Danish", "Hebrew", "Malay", "Persian",
+                "Slovak", "Swedish", "Croatian", "Filipino", "Hungarian",
+                "Norwegian", "Slovenian", "Catalan", "Nynorsk", "Tamil",
+                "Afrikaans", "auto"
+            ]
+        },
+        "pronunciation_dict": {
+            "description": "自定义读音词典",
+            "example": {"tone": ["AI/Artificial Intelligence", "LLM/Large Language Model"]}
+        },
+        "voice_modify": {
+            "description": "声音修饰效果",
+            "fields": {
+                "pitch": "音调（需配合 voice_modify 使用，范围 -24~24）",
+                "intensity": "强度（-24~24）",
+                "timbre": "音色（-24~24）",
+                "sound_effects": "音效，如 spacious_echo"
+            },
+            "examples": {
+                "空旷回声": {"pitch": 0, "intensity": 0, "timbre": 0, "sound_effects": "spacious_echo"}
+            }
+        }
+    },
+
+    "_voice_pools": {
+        "zh_male": {
+            "label": "中文-男声",
+            "voices": [
+                {"voice_id": "male-qn-qingse", "description": "青年男性，清亮清澈，适合知识科普", "style": "清朗"},
+                {"voice_id": "male-qn-bai", "description": "青年男性，标准播报", "style": "标准"},
+                {"voice_id": "male-qn-K", "description": "中年男性，沉稳磁性", "style": "磁性"}
+            ]
+        },
+        "zh_female": {
+            "label": "中文-女声",
+            "voices": [
+                {"voice_id": "female-yujie", "description": "青年女性，专业知性", "style": "知性"},
+                {"voice_id": "female-tianmei", "description": "青年女性，甜美柔和", "style": "甜美"},
+                {"voice_id": "female-tianmei_v2", "description": "青年女性 v2，柔和细腻", "style": "柔和"}
+            ]
+        },
+        "en_voices": {
+            "label": "English Voices",
+            "voices": [
+                {"voice_id": "English_expressive_narrator", "description": "Expressive narrator, versatile storytelling", "style": "narrative"},
+                {"voice_id": "English_Graceful_Lady", "description": "Elegant female voice, professional presentations", "style": "elegant"},
+                {"voice_id": "English_Dave_Character", "description": "Character voice, dramatic storytelling", "style": "character"},
+                {"voice_id": "English_Goldman", "description": "Deep male voice, authoritative", "style": "deep"},
+                {"voice_id": "English_Aussie_Man", "description": "Australian male, friendly conversational", "style": "australian"},
+                {"voice_id": "English_British_Man", "description": "British male, refined accent", "style": "british"}
+            ]
+        }
+    },
+
+    "_model_guide": {
+        "speech-2.8-hd": {
+            "label": "speech-2.8-hd",
+            "quality": "最高保真度",
+            "speed_label": "标准",
+            "emotion_support": true,
+            "interjection_support": true,
+            "voices": "全部系统音色 + AI 生成音色"
+        },
+        "speech-2.8-turbo": {
+            "label": "speech-2.8-turbo",
+            "quality": "高保真度",
+            "speed_label": "快速",
+            "emotion_support": true,
+            "interjection_support": true,
+            "voices": "全部系统音色 + AI 生成音色"
+        },
+        "speech-2.6-hd": {
+            "label": "speech-2.6-hd",
+            "quality": "高保真度",
+            "speed_label": "快速",
+            "emotion_support": false,
+            "interjection_support": false,
+            "voices": "AI 生成音色为主"
+        },
+        "speech-2.6-turbo": {
+            "label": "speech-2.6-turbo",
+            "quality": "标准",
+            "speed_label": "极速",
+            "emotion_support": false,
+            "interjection_support": false,
+            "voices": "AI 生成音色为主"
+        },
+        "speech-02-hd": {
+            "label": "speech-02-hd",
+            "quality": "高保真度",
+            "speed_label": "标准",
+            "emotion_support": false,
+            "voices": "Speech-02 系列音色"
+        },
+        "speech-02-turbo": {
+            "label": "speech-02-turbo",
+            "quality": "标准",
+            "speed_label": "快速",
+            "emotion_support": false,
+            "voices": "Speech-02 系列音色"
+        },
+        "speech-01-hd": {
+            "label": "speech-01-hd",
+            "quality": "最高保真度（旗舰）",
+            "speed_label": "标准",
+            "emotion_support": false,
+            "voices": "Speech-01 系列音色"
+        },
+        "speech-01-turbo": {
+            "label": "speech-01-turbo",
+            "quality": "高保真度",
+            "speed_label": "快速",
+            "emotion_support": false,
+            "voices": "Speech-01 系列音色"
+        }
+    },
+
+    "_sound_effects": {
+        "描述": "voice_modify.sound_effects 可选值（需确认账户支持）",
+        "examples": ["spacious_echo", "room_reverb", "telephone", "radio"]
+    }
+}

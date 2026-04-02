@@ -9,6 +9,7 @@ import argparse
 import subprocess
 import time
 import logging
+from enum import Enum
 from pathlib import Path
 
 from rich.console import Console
@@ -19,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from minimax_tts_tool import load_api_key as load_minimax_key
 from qwen_omni_tts_tool import load_api_config as load_qwen_config
+from qwen_tts_tool import load_api_config as load_qwen_tts_config
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -34,20 +36,27 @@ OUTPUTS_DIR.mkdir(exist_ok=True)
 WORK_DIR.mkdir(exist_ok=True)
 
 
-# ──────────────────────────────────────────────────────────────
+class EnginePriority(str, Enum):
+    """引擎优先级枚举，防止字符串硬编码"""
+    AUTO = "auto"
+    MINIMAX = "minimax"
+    QWEN = "qwen"
+    QWEN_TTS = "qwen_tts"
 # 引擎可用性检测
 # ──────────────────────────────────────────────────────────────
 
 def check_engines():
     """检测所有引擎状态"""
-    minimax_llm = load_minimax_key() is not None
-    minimax_tts = load_minimax_key() is not None
+    minimax_ok = load_minimax_key() is not None
     qwen_cfg = load_qwen_config()
     qwen_ok = qwen_cfg[0] is not None and qwen_cfg[1] is not None
+    qwen_tts_cfg = load_qwen_tts_config()
+    qwen_tts_ok = qwen_tts_cfg[0] is not None and qwen_tts_cfg[1] is not None
 
     return {
-        "minimax_studio": minimax_llm and minimax_tts,
+        "minimax_studio": minimax_ok,
         "qwen_omni_studio": qwen_ok,
+        "qwen_tts_studio": qwen_tts_ok,
     }
 
 
@@ -80,7 +89,7 @@ def run_minimax_studio(source, mode, output, instruction, roles_path,
     script_file = OUTPUTS_DIR / "generated_script.txt"
 
     # 步骤 1: LLM 生成脚本
-    console.print("\n[bold yellow]步骤 1/2:[/yellow] [cyan]MiniMax LLM 生成脚本...[/cyan]")
+    console.print("\n[bold][yellow]步骤 1/2:[/yellow][/bold] [cyan]MiniMax LLM 生成脚本...[/cyan]")
 
     env = dict(os.environ)
     if llm_url:
@@ -102,7 +111,7 @@ def run_minimax_studio(source, mode, output, instruction, roles_path,
     console.print(f"[green]✓ 脚本生成完成[/green]")
 
     # 步骤 2: MiniMax TTS 合成
-    console.print("\n[bold yellow]步骤 2/2:[/yellow] [cyan]MiniMax TTS 语音合成...[/cyan]")
+    console.print("\n[bold][yellow]步骤 2/2:[/yellow][/bold] [cyan]MiniMax TTS 语音合成...[/cyan]")
 
     tts_env = dict(os.environ)
     if tts_url:
@@ -131,16 +140,44 @@ def run_minimax_studio(source, mode, output, instruction, roles_path,
 # Qwen Omni Studio 流程
 # ──────────────────────────────────────────────────────────────
 
-def run_qwen_studio(source, mode, output, instruction, voice):
+def run_qwen_studio(source, mode, output, instruction, voice, roles_path=None, stereo=False, bgm=None):
     """运行 Qwen Omni 全流程 Fallback"""
     console.print("\n[bold yellow]→ 切换到 Qwen Omni Studio (Fallback)...[/bold yellow]")
-    from qwen_omni_studio import run_full
-    return run_full(
+    from qwen_omni_studio import run_full as run_omni_full
+
+    roles = {}
+    if roles_path and os.path.exists(roles_path):
+        with open(roles_path) as f:
+            roles = json.load(f)
+
+    return run_omni_full(
         source=source,
         mode=mode,
         output_file=output,
         instruction=instruction,
         voice=voice,
+        verbose=True,
+        roles=roles,
+        use_stereo=stereo,
+        bgm_file=bgm,
+    )
+
+
+def run_qwen_tts_studio(source, mode, output, instruction, roles_path=None,
+                        stereo=False, bgm=None, llm_model="qwen-turbo"):
+    """运行 Qwen TTS Studio: qwen-turbo 脚本生成 + qwen3-tts-flash TTS"""
+    console.print("\n[bold cyan]→ Qwen TTS Studio (49种音色，0.001元/字符)...[/bold cyan]")
+    from qwen_tts_studio import run_full as run_tts_full
+
+    return run_tts_full(
+        source=source,
+        mode=mode,
+        output_file=output,
+        instruction=instruction,
+        roles_path=roles_path,
+        use_stereo=stereo,
+        bgm_file=bgm,
+        llm_model=llm_model,
         verbose=True,
     )
 
@@ -150,80 +187,96 @@ def run_qwen_studio(source, mode, output, instruction, voice):
 # ──────────────────────────────────────────────────────────────
 
 def run(source, mode, output, instruction, roles_path,
-         stereo, bgm, llm_url, tts_url, voice, engine_priority):
+         stereo, bgm, llm_url, tts_url, voice, engine_priority, llm_model):
     """
     统一编排入口
 
     Args:
-        engine_priority: "auto" | "minimax" | "qwen"
+        engine_priority: EnginePriority
     """
     total_start = time.time()
     engs = check_engines()
 
     console.print(Panel.fit(
         f"[bold cyan]AI Content Studio Orchestrator[/bold cyan]\n"
-        f"模式: {mode}  |  优先引擎: {engine_priority}\n"
+        f"模式: {mode}  |  优先引擎: {engine_priority.value}\n"
         f"源: {source[:40]}{'...' if len(source) > 40 else ''}",
         title="Studio Orchestrator"
     ))
 
-    llm_time = tts_time = 0.0
     used_engine = None
 
+    # ── Qwen TTS only ──
+    if engine_priority == EnginePriority.QWEN_TTS:
+        if not engs["qwen_tts_studio"]:
+            console.print("[red]✗ Qwen TTS Studio 未配置 API Key[/red]")
+            return False, None, 0
+        start = time.time()
+        ok = run_qwen_tts_studio(source, mode, output, instruction,
+                                 roles_path=roles_path, stereo=stereo, bgm=bgm,
+                                 llm_model=llm_model)
+        used_engine = EnginePriority.QWEN_TTS.value
+        total_time = time.time() - start
+        return ok, used_engine, total_time
+
     # ── Qwen Omni only ──
-    if engine_priority == "qwen":
+    if engine_priority == EnginePriority.QWEN:
         if not engs["qwen_omni_studio"]:
             console.print("[red]✗ Qwen Omni 未配置 API Key[/red]")
             return False, None, 0
         start = time.time()
-        ok = run_qwen_studio(source, mode, output, instruction, voice)
+        ok = run_qwen_studio(source, mode, output, instruction, voice,
+                             roles_path=roles_path, stereo=stereo, bgm=bgm)
         used_engine = "qwen_omni"
-        tts_time = time.time() - start
-        total_time = time.time() - total_start
+        total_time = time.time() - start
         return ok, used_engine, total_time
 
     # ── MiniMax only ──
-    if engine_priority == "minimax":
+    if engine_priority == EnginePriority.MINIMAX:
         if not engs["minimax_studio"]:
             console.print("[red]✗ MiniMax 未配置 API Key[/red]")
             return False, None, 0
+        start = time.time()
         try:
-            llm_start = time.time()
             ok = run_minimax_studio(source, mode, output, instruction,
                                     roles_path, stereo, bgm, llm_url, tts_url)
-            used_engine = "minimax"
-            total_time = time.time() - total_start
+            used_engine = EnginePriority.MINIMAX.value
+            total_time = time.time() - start
             return ok, used_engine, total_time
         except RuntimeError as e:
             console.print(f"[red]✗ MiniMax 流程失败: {e}[/red]")
             return False, None, 0
 
-    # ── Auto: MiniMax 优先，失败 fallback Qwen ──
-    if engine_priority == "auto":
+    # ── Auto: MiniMax → Qwen TTS → Qwen Omni ──
+    if engine_priority == EnginePriority.AUTO:
         # 尝试 MiniMax
         if engs["minimax_studio"]:
             try:
-                llm_start = time.time()
                 ok = run_minimax_studio(source, mode, output, instruction,
                                         roles_path, stereo, bgm, llm_url, tts_url)
-                used_engine = "minimax"
-                total_time = time.time() - total_start
-                return ok, used_engine, total_time
+                return ok, EnginePriority.MINIMAX.value, time.time() - total_start
             except RuntimeError as e:
                 console.print(f"[yellow]⚠ MiniMax 流程失败: {e}[/yellow]")
 
-        # Fallback to Qwen Omni
+        # 尝试 Qwen TTS（49种音色，最佳性价比）
+        if engs["qwen_tts_studio"]:
+            console.print(f"[yellow]→ Fallback: 切换到 Qwen TTS Studio...[/yellow]")
+            start = time.time()
+            ok = run_qwen_tts_studio(source, mode, output, instruction,
+                                     roles_path=roles_path, stereo=stereo, bgm=bgm,
+                                     llm_model=llm_model)
+            return ok, EnginePriority.QWEN_TTS.value, time.time() - start
+
+        # 尝试 Qwen Omni
         if engs["qwen_omni_studio"]:
             console.print(f"[yellow]→ Fallback: 切换到 Qwen Omni...[/yellow]")
             start = time.time()
-            ok = run_qwen_studio(source, mode, output, instruction, voice)
-            used_engine = "qwen_omni"
-            tts_time = time.time() - start
-            total_time = time.time() - total_start
-            return ok, used_engine, total_time
-        else:
-            console.print("[red]✗ 所有引擎均不可用[/red]")
-            return False, None, 0
+            ok = run_qwen_studio(source, mode, output, instruction, voice,
+                                 roles_path=roles_path, stereo=stereo, bgm=bgm)
+            return ok, "qwen_omni", time.time() - start
+
+        console.print("[red]✗ 所有引擎均不可用[/red]")
+        return False, None, 0
 
     return False, None, 0
 
@@ -233,6 +286,7 @@ def print_summary(source, mode, output, engine, total_time):
     engine_label = {
         "minimax": "MiniMax Content Studio",
         "qwen_omni": "Qwen Omni Studio (Fallback)",
+        "qwen_tts": "Qwen TTS Studio (49音色)",
     }.get(engine, engine)
 
     table = Table(show_header=False, box=None)
@@ -256,9 +310,10 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 引擎优先级（--engine）:
-  auto     MiniMax 优先，失败自动切换到 Qwen Omni（全流程 fallback，默认）
-  minimax  仅使用 MiniMax Content Studio
-  qwen     仅使用 Qwen Omni Studio
+  auto      MiniMax 优先 → Qwen TTS → Qwen Omni（全流程 fallback，默认）
+  minimax   仅使用 MiniMax Content Studio
+  qwen      仅使用 Qwen Omni Studio
+  qwen_tts  仅使用 Qwen TTS Studio（49种音色，0.001元/字符）
 
 模式（--mode）:
   deep_dive  深入探究，广播级播客对话
@@ -287,9 +342,12 @@ def main():
     parser.add_argument("--llm-url", help="MiniMax LLM API URL")
     parser.add_argument("--tts-url", help="MiniMax TTS API URL")
     parser.add_argument("-v", "--voice", default="cherry", help="音色（Qwen Omni）")
-    parser.add_argument("--engine", default="auto",
-                        choices=["auto", "minimax", "qwen"],
+    parser.add_argument("--engine", default=EnginePriority.AUTO,
+                        type=EnginePriority,
                         help="引擎优先级")
+    parser.add_argument("--llm-model", default="qwen-turbo",
+                        choices=["qwen-turbo", "qwen-plus", "qwen3-turbo"],
+                        help="Qwen TTS Studio 脚本生成模型")
     parser.add_argument("--check", action="store_true", help="仅检查引擎可用性")
 
     args = parser.parse_args()
@@ -330,6 +388,7 @@ def main():
         tts_url=args.tts_url,
         voice=args.voice,
         engine_priority=args.engine,
+        llm_model=args.llm_model,
     )
 
     if ok:
