@@ -209,10 +209,3 @@ export MINIMAX_API_KEY="..."
 cd /Users/huangzhonghui/ai-content-studio
 bash scripts/install.sh  # 自动备份旧版本
 ```
-
----
-
-## 参考资料
-
-- [Agent Skills 目录规范](https://github.com/anthropics/claude-code)
-- [Claude Code Skills 系统](https://claude.ai/code)
