@@ -2,7 +2,29 @@
 name: ai-content-studio
 description: |
   AI Content Studio — 专业级 AI 音频内容创作工具。
-  Use this skill whenever working in or with the ai-content-studio project: generating podcasts/TTS audio, running the orchestrator, fixing TTS bugs, extending engines, adding new voices, configuring role libraries, running tests, or reading the project's architecture. Make sure to invoke this skill for any task involving MiniMax T2A V2, Qwen TTS, Qwen Omni, voice synthesis, role configuration, or the audio studio workflow — even if the user doesn't explicitly name the project.
+  Use this skill whenever working in or with the ai-content-studio project:
+  generating podcasts/TTS audio, running the orchestrator, fixing TTS bugs,
+  extending engines, adding new voices, configuring role libraries, running
+  tests, or reading the project's architecture. Make sure to invoke this skill
+  for any task involving MiniMax T2A V2, Qwen TTS, Qwen Omni, voice synthesis,
+  role configuration, or the audio studio workflow — even if the user doesn't
+  explicitly name the project.
+  触发词：播客生成、TTS 音频合成、多角色对话、语音合成、辩论播客
+
+# OpenClaw 元数据
+metadata:
+  openclaw:
+    version: "1.0"
+    requires:
+      bins:
+        - ffmpeg
+      env:
+        - DASHSCOPE_API_KEY
+        - MINIMAX_API_KEY
+    install:
+      - kind: brew
+        formula: ffmpeg
+        description: "音频处理引擎（macOS）"
 ---
 
 # AI Content Studio Skill
