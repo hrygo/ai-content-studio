@@ -57,8 +57,8 @@ Repository = "https://github.com/hrygo/ai-content-studio.git"
 Issues = "https://github.com/hrygo/ai-content-studio/issues"
 
 [project.scripts]
-# CLI 命令注册（可选）
-ai-studio = "src.cli.studio_orchestrator:main"
+# Clean Architecture CLI 入口
+ai-studio = "src.infrastructure.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
