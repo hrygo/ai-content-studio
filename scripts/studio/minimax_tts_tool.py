@@ -189,8 +189,8 @@ def process_segments(segments, output_file, roles, use_stereo=False, turn_pause=
     if not segments:
         return False
 
-    work_dir = Path(__file__).parent / "work"
-    work_dir.mkdir(exist_ok=True)
+    from paths import WORK_DIR
+    work_dir = WORK_DIR
 
     temp_files = []
     pan_list = []

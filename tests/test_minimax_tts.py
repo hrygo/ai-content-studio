@@ -1,21 +1,23 @@
 import os
 import sys
 
-# 将当前脚本所在目录加入 Python 搜索路径，以便导入正式脚本
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(current_dir)
+# 路径配置
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STUDIO_DIR = os.path.join(ROOT, "scripts", "studio")
+sys.path.insert(0, STUDIO_DIR)
 
 try:
     from minimax_tts_tool import text_to_speech, load_api_key
 except ImportError:
-    print("错误：无法找到正式脚本 minimax_tts_tool.py，请确保两个文件在同一目录下。")
+    print("错误：无法找到正式脚本 minimax_tts_tool.py，请确保在 scripts/studio/ 目录下。")
     sys.exit(1)
 
 def run_suite():
     """测试套件：验证正式脚本的核心功能"""
     print("正在启动 MiniMax TTS 正式脚本集成测试...\n")
-    
+
     test_results = []
+    current_dir = os.path.dirname(os.path.abspath(__file__))
 
     # 测试案例 1: 基础合成功能
     print("[测试 1] 验证基础文字转语音功能...")

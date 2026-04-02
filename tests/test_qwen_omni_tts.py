@@ -11,9 +11,11 @@ import sys
 import time
 import subprocess
 
-# 路径
+# 路径：项目根目录
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, ROOT)
+# 脚本目录：scripts/studio/
+STUDIO_DIR = os.path.join(ROOT, "scripts", "studio")
+sys.path.insert(0, STUDIO_DIR)
 
 from qwen_omni_tts_tool import (
     load_api_config,
@@ -23,7 +25,7 @@ from qwen_omni_tts_tool import (
 )
 from qwen_omni_studio import run_full
 
-OUTPUTS = os.path.join(ROOT, "outputs")
+OUTPUTS = os.path.join(ROOT, "assets", "outputs")
 os.makedirs(OUTPUTS, exist_ok=True)
 
 

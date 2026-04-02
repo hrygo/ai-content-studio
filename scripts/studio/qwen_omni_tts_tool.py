@@ -183,8 +183,8 @@ def process_segments(segments, output_file, roles, use_stereo=False,
     if not segments:
         return False
 
-    work_dir = Path(__file__).parent / "work"
-    work_dir.mkdir(exist_ok=True)
+    from paths import WORK_QWEN_DIR
+    work_dir = WORK_QWEN_DIR
 
     temp_files = []
     pan_list = []

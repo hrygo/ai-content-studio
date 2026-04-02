@@ -9,22 +9,36 @@ description: |
 
 专业级 AI 音频内容创作工具。三引擎编排（MiniMax → Qwen TTS → Qwen Omni），通过 LLM 编排播客脚本 + 高保真语音合成，生成广播级立体声音频。
 
-## 架构总览
+## 目录结构
 
 ```
-studio_orchestrator.py     # 推荐入口，三引擎编排 + 自动 Fallback
-       │
-       ├── content_studio.py        # MiniMax LLM 脚本生成
-       ├── minimax_tts_tool.py      # MiniMax T2A V2 TTS
-       │
-       ├── qwen_tts_studio.py       # Qwen LLM 脚本生成
-       ├── qwen_tts_tool.py         # Qwen qwen3-tts-flash TTS
-       │
-       └── qwen_omni_studio.py      # Qwen Omni 全模态单次调用
-           qwen_omni_tts_tool.py    # Qwen qwen3-omni-flash TTS
-
-audio_utils.py             # 共享工具（FFmpeg 混音、正则解析、VoicePool）
-config_utils.py            # 统一配置加载（opencode.json）
+ai-content-studio/               # Skill 源码仓库
+├── SKILL.md                     # 本文件（主入口）
+├── scripts/
+│   ├── install.sh               # Skill 安装脚本
+│   └── studio/                  # TTS 引擎源码
+│       ├── studio_orchestrator.py   # 推荐入口，编排 + Fallback
+│       ├── content_studio.py        # MiniMax LLM 脚本生成
+│       ├── minimax_tts_tool.py      # MiniMax T2A V2 TTS
+│       ├── qwen_tts_studio.py       # Qwen LLM 脚本生成
+│       ├── qwen_tts_tool.py         # Qwen qwen3-tts-flash TTS
+│       ├── qwen_omni_studio.py      # Qwen Omni 全模态单次调用
+│       ├── qwen_omni_tts_tool.py    # Qwen qwen3-omni-flash TTS
+│       ├── audio_utils.py           # 共享工具（FFmpeg 混音、正则解析、VoicePool）
+│       ├── config_utils.py          # 统一配置加载（opencode.json）
+│       └── paths.py                 # 路径配置模块
+├── references/
+│   └── configs/                 # 角色库配置文件
+│       ├── studio_roles.json     # MiniMax 工作角色库（36 角色）
+│       ├── roles.json            # MiniMax 轻量角色库
+│       ├── minimax_voices.json   # MiniMax 音色参考文档
+│       └── qwen_voices.json      # Qwen TTS 角色库
+├── tests/                       # 测试脚本
+└── assets/                      # 运行时产出
+    ├── outputs/                 # 音频输出
+    ├── work/                    # MiniMax 临时文件
+    ├── work_qwen/               # Qwen Omni 临时文件
+    └── work_tts/                # Qwen TTS 临时文件
 ```
 
 **Fallback 链路**: `MiniMax → Qwen TTS → Qwen Omni`（全部失败才报错）
@@ -35,7 +49,7 @@ config_utils.py            # 统一配置加载（opencode.json）
 
 ### 一句话跑通
 ```bash
-python studio_orchestrator.py --source "源文本.txt" --stereo -o out.mp3
+cd scripts/studio && python studio_orchestrator.py --source "源文本.txt" --stereo -o out.mp3
 ```
 
 ### 生成模式（`--mode`）
@@ -48,6 +62,7 @@ python studio_orchestrator.py --source "源文本.txt" --stereo -o out.mp3
 
 ### 指定引擎
 ```bash
+cd scripts/studio
 python studio_orchestrator.py --source "文本" --engine minimax    # 仅 MiniMax
 python studio_orchestrator.py --source "文本" --engine qwen_tts   # 仅 Qwen TTS（49音色）
 python studio_orchestrator.py --source "文本" --engine qwen       # 仅 Qwen Omni
@@ -56,7 +71,7 @@ python studio_orchestrator.py --source "文本" --engine auto       # 自动 Fal
 
 ### 引擎状态检查
 ```bash
-python studio_orchestrator.py --check
+cd scripts/studio && python studio_orchestrator.py --check
 ```
 
 ### 立体声 + 背景音乐
@@ -66,11 +81,13 @@ python studio_orchestrator.py --source "文本.txt" --stereo --bgm ambient.mp3 -
 
 ### 独立 TTS 工具（绕过 LLM，直接合成已有脚本）
 ```bash
+cd scripts/studio
+
 # MiniMax（多角色对话文件）
-python minimax_tts_tool.py -s dialogue.txt -r configs/studio_roles.json --stereo -o multi.mp3
+python minimax_tts_tool.py -s dialogue.txt -r ../../references/configs/studio_roles.json --stereo -o out.mp3
 
 # Qwen TTS Studio
-python qwen_tts_studio.py --source "文本.txt" -r configs/qwen_voices.json -o out.mp3
+python qwen_tts_studio.py --source "文本.txt" -r ../../references/configs/qwen_voices.json -o out.mp3
 
 # Qwen Omni（单文本）
 python qwen_omni_tts_tool.py "待合成文本" -o output.wav -v cherry
@@ -78,7 +95,7 @@ python qwen_omni_tts_tool.py "待合成文本" -o output.wav -v cherry
 
 ### 运行测试
 ```bash
-cd tests && python test_minimax_tts.py
+python tests/test_minimax_tts.py
 python tests/test_qwen_omni_tts.py
 ```
 
@@ -93,7 +110,7 @@ python tests/test_qwen_omni_tts.py
 [Alex, excited]: 但最新实验数据显示...
 ```
 
-- `role` 必须在角色库（`configs/studio_roles.json` / `configs/qwen_voices.json`）中定义
+- `role` 必须在角色库（`references/configs/studio_roles.json` / `references/configs/qwen_voices.json`）中定义
 - `emotion` 可选，默认 `neutral`；MiniMax 支持：`happy`, `calm`, `angry`, `sad`
 - 角色切换自动插入 0.2s 停顿（`--pause` 可调）
 
@@ -103,12 +120,12 @@ python tests/test_qwen_omni_tts.py
 
 | 文件 | 引擎 | 用途 |
 |------|------|------|
-| `configs/studio_roles.json` | MiniMax | 推荐工作角色库（36 角色，6 大场景） |
-| `configs/roles.json` | MiniMax | 轻量角色库（3 角色，快速测试） |
-| `configs/minimax_voices.json` | MiniMax | 音色参考文档 + 参数指南（纯查阅） |
-| `configs/qwen_voices.json` | Qwen TTS | Qwen 角色库（24 角色 + 29 音色轮询池） |
+| `references/configs/studio_roles.json` | MiniMax | 推荐工作角色库（36 角色，6 大场景） |
+| `references/configs/roles.json` | MiniMax | 轻量角色库（3 角色，快速测试） |
+| `references/configs/minimax_voices.json` | MiniMax | 音色参考文档 + 参数指南（纯查阅） |
+| `references/configs/qwen_voices.json` | Qwen TTS | Qwen 角色库（24 角色 + 29 音色轮询池） |
 
-详见 `configs/README.md`。
+详见 `references/configs/README.md`。
 
 ---
 
@@ -130,6 +147,11 @@ export MINIMAX_TTS_API_URL="..."   # MiniMax TTS API URL（可选）
 
 ## 关键代码模式
 
+### 路径导入（scripts/studio/ 内部）
+```python
+from paths import REPO_ROOT, OUTPUTS_DIR, WORK_DIR, CONFIGS_DIR
+```
+
 ### 共享工具（所有引擎通用）
 ```python
 from audio_utils import (
@@ -141,18 +163,6 @@ from audio_utils import (
     stream_qwen_omni_events,               # SSE 流解析
     make_wav_header,                       # PCM WAV header 构造
 )
-
-# 解析对话脚本
-segments = parse_dialogue_segments_from_text(script_text)
-
-# 立体声声道分配（等距 [-0.8, +0.8]）
-pan_map = compute_role_pan_values(list(dict.fromkeys(s["role"] for s in segments)))
-
-# 音色池（轮询 + 显式分配）
-pool = VoicePool(voices=["cherry", "ethan", "chelsie"])
-for role_label, voice in explicit_voice_map.items():
-    pool.assign(role_label, voice)
-voice = pool.get("role_name")
 ```
 
 ### SHA256 缓存模式（TTS 片段缓存）
@@ -178,7 +188,7 @@ def segment_cache_key(voice, text, params):
 ## 扩展项目
 
 ### 新增音色/角色
-1. 在 `configs/studio_roles.json`（MiniMax）或 `configs/qwen_voices.json`（Qwen TTS）中添加条目
+1. 在 `references/configs/studio_roles.json`（MiniMax）或 `references/configs/qwen_voices.json`（Qwen TTS）中添加条目
 2. 角色名须与脚本中 `[role]` 标签完全匹配
 3. 运行 `python studio_orchestrator.py --check` 验证
 
@@ -206,19 +216,11 @@ sudo apt install ffmpeg  # Linux
 
 ---
 
-## 文件索引
+## 安装 Skill
 
-| 文件 | 用途 |
-|------|------|
-| `studio_orchestrator.py` | 推荐入口，编排 + Fallback |
-| `audio_utils.py` | 共享音频工具（解析/混音/VoicePool） |
-| `config_utils.py` | opencode.json 配置加载 |
-| `content_studio.py` | MiniMax LLM 脚本生成 |
-| `minimax_tts_tool.py` | MiniMax TTS 引擎 |
-| `qwen_tts_studio.py` | Qwen TTS Studio |
-| `qwen_tts_tool.py` | Qwen TTS 工具 |
-| `qwen_omni_studio.py` | Qwen Omni Studio |
-| `qwen_omni_tts_tool.py` | Qwen Omni TTS 工具 |
-| `configs/README.md` | 配置文件详细说明 |
-| `USER_MANUAL.md` | 终端用户使用指南 |
-| `README.md` | 项目级说明文档 |
+```bash
+bash scripts/install.sh        # 安装到 ~/.claude/skills/ai-content-studio/
+bash scripts/install.sh --uninstall  # 卸载
+```
+
+详见 `INSTALL.md`。

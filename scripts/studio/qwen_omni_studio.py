@@ -16,6 +16,7 @@ from rich.panel import Panel
 
 # 共享 TTS 工具
 sys.path.insert(0, str(Path(__file__).parent))
+from paths import REPO_ROOT
 from qwen_omni_tts_tool import (
     load_api_config,
     process_segments as tts_process_segments,

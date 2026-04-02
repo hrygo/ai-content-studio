@@ -247,8 +247,14 @@ def merge_audio_files(file_list, output_file, pan_list=None, bgm_file=None,
     if not file_list:
         return False
 
-    work_dir = Path(__file__).parent / work_dir_name
-    work_dir.mkdir(exist_ok=True)
+    from paths import WORK_DIR, WORK_QWEN_DIR, WORK_TTS_DIR
+    # 根据工作目录名选择对应路径
+    work_dir_map = {
+        "work": WORK_DIR,
+        "work_qwen": WORK_QWEN_DIR,
+        "work_tts": WORK_TTS_DIR,
+    }
+    work_dir = work_dir_map.get(work_dir_name, WORK_DIR)
 
     # 计算每段时长
     segment_durations_ms = [int(get_duration(f) * 1000) for f in file_list]

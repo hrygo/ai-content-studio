@@ -14,6 +14,7 @@ from rich.console import Console
 from rich.panel import Panel
 
 sys.path.insert(0, str(Path(__file__).parent))
+from paths import REPO_ROOT
 from qwen_tts_tool import (
     load_api_config,
     normalize_voice,

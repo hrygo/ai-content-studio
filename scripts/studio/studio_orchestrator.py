@@ -16,7 +16,13 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-sys.path.insert(0, str(Path(__file__).parent))
+# 脚本所在目录（scripts/studio/）
+_SCRIPT_DIR = Path(__file__).parent
+# 项目根目录（ai-content-studio/）
+_REPO_ROOT = _SCRIPT_DIR.parent
+
+# 让 Python 能找到同目录的模块
+sys.path.insert(0, str(_SCRIPT_DIR))
 
 from minimax_tts_tool import load_api_key as load_minimax_key
 from qwen_omni_tts_tool import load_api_config as load_qwen_config
@@ -25,12 +31,15 @@ from qwen_tts_tool import load_api_config as load_qwen_tts_config
 logger = logging.getLogger(__name__)
 console = Console()
 
-DIR = Path(__file__).parent
-PROCESSOR_SCRIPT = DIR / "content_studio.py"
-MINIMAX_TTS = DIR / "minimax_tts_tool.py"
-QWEN_STUDIO = DIR / "qwen_omni_studio.py"
-OUTPUTS_DIR = DIR / "outputs"
-WORK_DIR = DIR / "work"
+# Subprocess 调用用项目根相对路径（脚本都在 scripts/studio/）
+_PROCESSOR_SCRIPT = _SCRIPT_DIR / "content_studio.py"
+_MINIMAX_TTS = _SCRIPT_DIR / "minimax_tts_tool.py"
+_QWEN_STUDIO = _SCRIPT_DIR / "qwen_omni_studio.py"
+# 运行时产出目录（相对于项目根）
+OUTPUTS_DIR = _REPO_ROOT / "assets" / "outputs"
+WORK_DIR = _REPO_ROOT / "assets" / "work"
+# 角色库默认路径（configs/ → references/configs/）
+DEFAULT_ROLES = _REPO_ROOT / "references" / "configs" / "studio_roles.json"
 
 OUTPUTS_DIR.mkdir(exist_ok=True)
 WORK_DIR.mkdir(exist_ok=True)
@@ -96,7 +105,7 @@ def run_minimax_studio(source, mode, output, instruction, roles_path,
         env["MINIMAX_LLM_API_URL"] = llm_url
 
     cmd_llm = [
-        sys.executable, str(PROCESSOR_SCRIPT),
+        sys.executable, str(_PROCESSOR_SCRIPT),
         "--source", source,
         "--mode", mode,
         "--output", str(script_file),
@@ -118,7 +127,7 @@ def run_minimax_studio(source, mode, output, instruction, roles_path,
         tts_env["MINIMAX_TTS_API_URL"] = tts_url
 
     tts_cmd = [
-        sys.executable, str(MINIMAX_TTS),
+        sys.executable, str(_MINIMAX_TTS),
         "-s", str(script_file),
         "-r", str(roles_path),
         "-o", output,
@@ -335,7 +344,7 @@ def main():
                         help="输出文件路径（默认: outputs/auto_<timestamp>.mp3）")
     parser.add_argument("--instruction", help="额外要求")
     parser.add_argument("-r", "--roles",
-                        default=str(DIR / "configs" / "studio_roles.json"),
+                        default=str(DEFAULT_ROLES),
                         help="角色库配置文件")
     parser.add_argument("--stereo", action="store_true", help="开启立体声")
     parser.add_argument("--bgm", help="背景音乐文件")
@@ -371,7 +380,7 @@ def main():
     # 角色库路径发现
     roles_path = Path(args.roles)
     if not roles_path.exists():
-        fallback = DIR / "roles.json"
+        fallback = _REPO_ROOT / "references" / "configs" / "roles.json"
         if fallback.exists():
             roles_path = fallback
 

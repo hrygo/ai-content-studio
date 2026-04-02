@@ -59,7 +59,8 @@ def load_api_config():
 
 def load_voice_config():
     """加载 qwen voices 配置"""
-    config_path = Path(__file__).parent / "configs" / "qwen_voices.json"
+    from paths import CONFIGS_DIR
+    config_path = CONFIGS_DIR / "qwen_voices.json"
     if config_path.exists():
         try:
             with open(config_path, "r", encoding="utf-8") as f:
@@ -216,8 +217,8 @@ def process_segments(segments, output_file, roles, use_stereo=False,
     voice_pool = voice_cfg.get("voice_pool", ["cherry", "ethan", "chelsie"])
     role_defaults = voice_cfg.get("role_defaults", {})
 
-    work_dir = Path(__file__).parent / "work"
-    work_dir.mkdir(exist_ok=True)
+    from paths import WORK_TTS_DIR
+    work_dir = WORK_TTS_DIR
 
     temp_files = []
     pan_list = []
@@ -337,7 +338,8 @@ def main():
             except Exception:
                 pass
         else:
-            cfg_path = Path(__file__).parent / "configs" / "qwen_voices.json"
+            from paths import CONFIGS_DIR
+            cfg_path = CONFIGS_DIR / "qwen_voices.json"
             if cfg_path.exists():
                 try:
                     with open(cfg_path, "r", encoding="utf-8") as f:
