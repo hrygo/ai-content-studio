@@ -6,9 +6,9 @@ from typing import Optional, Dict, Any, Union
 import logging
 
 from .base import BaseTTSEngine
-from services.api_client import MiniMaxClient
-from core.enums import EmotionType, LanguageCode, MiniMaxVoiceID
-from core.tts_config import TTSConfig
+from src.services.api_client import MiniMaxClient
+from src.core.enums import EmotionType, LanguageCode, MiniMaxVoiceID
+from src.core.tts_config import TTSConfig
 
 logger = logging.getLogger(__name__)
 

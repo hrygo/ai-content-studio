@@ -257,8 +257,8 @@ export DASHSCOPE_API_KEY="your-dashscope-key"
 
 ```python
 # MiniMax 引擎
-from core.llm_engines import MiniMaxLLMEngine
-from core.tts_engines import MiniMaxTTSEngine
+from src.core.llm_engines import MiniMaxLLMEngine
+from src.core.tts_engines import MiniMaxTTSEngine
 
 llm = MiniMaxLLMEngine()
 tts = MiniMaxTTSEngine()
@@ -267,8 +267,8 @@ text = llm.generate("介绍一下自己")
 tts.synthesize(text, "output.mp3")
 
 # Qwen 引擎
-from core.llm_engines import QwenLLMEngine
-from core.tts_engines import QwenTTSEngine
+from src.core.llm_engines import QwenLLMEngine
+from src.core.tts_engines import QwenTTSEngine
 
 llm = QwenLLMEngine()
 tts = QwenTTSEngine()
@@ -281,7 +281,7 @@ tts.synthesize(text, "output.wav", voice="Aurora")
 
 ## 🔄 向后兼容性
 
-- ✅ 旧代码（`scripts/studio/`）继续可用
+- ✅ 旧代码（`src/cli/`）继续可用
 - ✅ 新架构不影响现有功能
 - ✅ 可逐步迁移
 
@@ -347,6 +347,6 @@ tts.synthesize(text, "output.wav", voice="Aurora")
 ## 📞 技术支持
 
 如有问题，请查看：
-- 核心代码：`core/` 和 `services/`
+- 核心代码：`src/core/` 和 `src/services/`
 - 使用示例：`examples/`
 - 详细文档：`docs/`

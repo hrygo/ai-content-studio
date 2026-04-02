@@ -45,7 +45,7 @@ compatibility:
 
 ```bash
 # 标准命令（直接运行）
-cd scripts/studio
+cd src/cli
 python studio_orchestrator.py \
   --source "你的内容.txt" \
   --mode <选定的模式> \
@@ -68,7 +68,7 @@ python studio_orchestrator.py \
 
 ### 一句话跑通
 ```bash
-cd scripts/studio && python studio_orchestrator.py --source "文本.txt" --stereo -o out.mp3
+cd src/cli && python studio_orchestrator.py --source "文本.txt" --stereo -o out.mp3
 ```
 
 ### 指定引擎

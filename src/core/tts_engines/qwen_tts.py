@@ -10,8 +10,8 @@ import requests
 from typing import Optional, List, Dict, Any, Union
 
 from .base import BaseTTSEngine
-from services.sse_parser import parse_sse_stream
-from core.enums import QwenVoiceID, LanguageCode
+from src.services.sse_parser import parse_sse_stream
+from src.core.enums import QwenVoiceID, LanguageCode
 
 logger = logging.getLogger(__name__)
 

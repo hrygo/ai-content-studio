@@ -12,10 +12,10 @@
 经过系统性分析，代码库中发现 **5 大类字符串常量** 应该转换为枚举类型，共计 **86 个字符串值**。
 
 ### 影响范围
-- **核心引擎**: `core/tts_engines/`, `core/llm_engines/`
-- **API 客户端**: `services/api_client.py`
-- **配置系统**: `services/config.py`
-- **工具脚本**: `scripts/studio/`
+- **核心引擎**: `src/core/tts_engines/`, `src/core/llm_engines/`
+- **API 客户端**: `src/services/api_client.py`
+- **配置系统**: `src/services/config.py`
+- **工具脚本**: `src/cli/`
 - **配置文件**: `references/configs/*.json`
 
 ---
@@ -23,7 +23,7 @@
 ## 1. Language Codes (语言代码)
 
 ### Current Usage
-**File**: `core/tts_engines/qwen_tts.py`
+**File**: `src/core/tts_engines/qwen_tts.py`
 ```python
 SUPPORTED_LANGUAGES = [
     "Auto",  # 自动检测
@@ -64,8 +64,8 @@ class LanguageCode(str, Enum):
 
 ### Impact Analysis
 - **Files Affected**: 3
-  - `core/tts_engines/qwen_tts.py` (synthesis method)
-  - `scripts/studio/qwen_tts_tool.py` (CLI argument)
+  - `src/core/tts_engines/qwen_tts.py` (synthesis method)
+  - `src/cli/qwen_tts_tool.py` (CLI argument)
   - `references/configs/qwen_voices.json` (role config)
 - **Migration Complexity**: **Low**
 - **Breaking Changes**: None (if using `from_string` fallback)
@@ -81,7 +81,7 @@ class LanguageCode(str, Enum):
 ## 2. Emotion Types (情感类型)
 
 ### Current Usage
-**File**: `services/api_client.py`, `references/configs/studio_roles.json`
+**File**: `src/services/api_client.py`, `references/configs/studio_roles.json`
 ```python
 # MiniMax TTS emotion parameter
 emotion: str = "neutral"  # 可选值: happy, sad, angry, fearful, surprised, calm, fluent
@@ -130,10 +130,10 @@ class EmotionType(str, Enum):
 
 ### Impact Analysis
 - **Files Affected**: 12
-  - `services/api_client.py` (API 方法签名)
-  - `core/tts_engines/minimax.py` (engine 实现)
-  - `scripts/studio/audio_utils.py` (dialogue parser)
-  - `scripts/studio/qwen_omni_tts_tool.py` (TTS 工具)
+  - `src/services/api_client.py` (API 方法签名)
+  - `src/core/tts_engines/minimax.py` (engine 实现)
+  - `src/cli/audio_utils.py` (dialogue parser)
+  - `src/cli/qwen_omni_tts_tool.py` (TTS 工具)
   - `references/configs/studio_roles.json` (42 个角色定义)
 - **Migration Complexity**: **Medium**
 - **Breaking Changes**: 需要更新 JSON 配置加载逻辑
@@ -279,10 +279,10 @@ class QwenVoiceID(str, Enum):
 
 ### Impact Analysis
 - **Files Affected**: 15
-  - `core/tts_engines/minimax.py`
-  - `core/tts_engines/qwen_tts.py`
-  - `core/tts_engines/qwen_omni.py`
-  - `services/config.py` (default voice 配置)
+  - `src/core/tts_engines/minimax.py`
+  - `src/core/tts_engines/qwen_tts.py`
+  - `src/core/tts_engines/qwen_omni.py`
+  - `src/services/config.py` (default voice 配置)
   - `references/configs/minimax_voices.json`
   - `references/configs/qwen_voices.json`
   - `references/configs/studio_roles.json`
@@ -298,7 +298,7 @@ class QwenVoiceID(str, Enum):
 
 ### Current Usage
 ```python
-# scripts/studio/qwen_omni_tts_tool.py
+# src/cli/qwen_omni_tts_tool.py
 def text_to_speech_qwen(..., format="wav"):
     # qwen3-omni-flash 不支持 mp3
     audio_format = "wav" if format == "mp3" else format
@@ -335,11 +335,11 @@ class AudioFormat(str, Enum):
 
 ### Impact Analysis
 - **Files Affected**: 6
-  - `core/tts_engines/qwen_omni.py`
-  - `core/tts_engines/qwen_tts.py`
-  - `scripts/studio/qwen_omni_tts_tool.py`
-  - `scripts/studio/qwen_tts_tool.py`
-  - `services/audio_processor.py`
+  - `src/core/tts_engines/qwen_omni.py`
+  - `src/core/tts_engines/qwen_tts.py`
+  - `src/cli/qwen_omni_tts_tool.py`
+  - `src/cli/qwen_tts_tool.py`
+  - `src/services/audio_processor.py`
 - **Migration Complexity**: **Low**
 
 ---
@@ -378,9 +378,9 @@ class TTSEngineType(str, Enum):
 
 ### Impact Analysis
 - **Files Affected**: 4
-  - `services/config.py`
+  - `src/services/config.py`
   - `config.example.json`
-  - `scripts/studio/studio_orchestrator.py`
+  - `src/cli/studio_orchestrator.py`
 - **Migration Complexity**: **Low**
 
 ---
@@ -390,12 +390,12 @@ class TTSEngineType(str, Enum):
 ### Phase 1: Core Enums (Week 1)
 **Priority**: High | **Risk**: Low
 
-1. 创建 `core/enums.py` 文件，定义所有枚举
+1. 创建 `src/core/enums.py` 文件，定义所有枚举
 2. 在 TTS 引擎中使用枚举
 3. 添加 `from_string` 方法保持向后兼容
 
 **Tasks**:
-- [ ] Create `core/enums.py` with 5 enum classes
+- [ ] Create `src/core/enums.py` with 5 enum classes
 - [ ] Update `BaseTTSEngine` to use enums
 - [ ] Add unit tests for enum conversion
 

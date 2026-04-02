@@ -9,9 +9,9 @@ from pathlib import Path
 # 添加项目根目录到 Python 路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.llm_engines import QwenLLMEngine
-from core.tts_engines import QwenOmniTTSEngine, QwenTTSEngine
-from services.config import get_config
+from src.core.llm_engines import QwenLLMEngine
+from src.core.tts_engines import QwenOmniTTSEngine, QwenTTSEngine
+from src.services.config import get_config
 
 
 def example_qwen_llm():

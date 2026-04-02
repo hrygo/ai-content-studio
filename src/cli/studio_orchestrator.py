@@ -16,10 +16,10 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-# 脚本所在目录（scripts/studio/）
+# 脚本所在目录（src/cli/）
 _SCRIPT_DIR = Path(__file__).parent
-# 项目根目录（ai-content-studio/）
-_REPO_ROOT = _SCRIPT_DIR.parent
+# 项目根目录（ai-content-studio/）- src/cli/ → src/ → 项目根
+_REPO_ROOT = _SCRIPT_DIR.parent.parent
 
 # 让 Python 能找到同目录的模块
 sys.path.insert(0, str(_SCRIPT_DIR))
@@ -31,7 +31,7 @@ from qwen_tts_tool import load_api_config as load_qwen_tts_config
 logger = logging.getLogger(__name__)
 console = Console()
 
-# Subprocess 调用用项目根相对路径（脚本都在 scripts/studio/）
+# Subprocess 调用用项目根相对路径（脚本都在 src/cli/）
 _PROCESSOR_SCRIPT = _SCRIPT_DIR / "content_studio.py"
 _MINIMAX_TTS = _SCRIPT_DIR / "minimax_tts_tool.py"
 _QWEN_STUDIO = _SCRIPT_DIR / "qwen_omni_studio.py"

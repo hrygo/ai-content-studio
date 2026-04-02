@@ -4,7 +4,7 @@ TTS 配置数据类
 """
 from dataclasses import dataclass, field
 from typing import Optional, Union, Dict, Any
-from core.enums import EmotionType, LanguageCode, AudioFormat
+from src.core.enums import EmotionType, LanguageCode, AudioFormat
 
 @dataclass(frozen=True)
 class TTSConfig:

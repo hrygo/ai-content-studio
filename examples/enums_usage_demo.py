@@ -2,7 +2,7 @@
 枚举使用示例
 演示如何在项目中使用 core.enums 模块
 """
-from core.enums import (
+from src.core.enums import (
     LanguageCode,
     EmotionType,
     QwenVoiceID,

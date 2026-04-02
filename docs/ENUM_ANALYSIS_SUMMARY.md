@@ -18,10 +18,10 @@
 5. **引擎类型** - `"minimax"`, `"qwen_tts"`, `"qwen_omni"` 3 种
 
 ### 影响范围
-- **核心引擎**: `core/tts_engines/`, `core/llm_engines/`
-- **API 客户端**: `services/api_client.py`
-- **配置系统**: `services/config.py`
-- **工具脚本**: `scripts/studio/` (15 个文件)
+- **核心引擎**: `src/core/tts_engines/`, `src/core/llm_engines/`
+- **API 客户端**: `src/services/api_client.py`
+- **配置系统**: `src/services/config.py`
+- **工具脚本**: `src/cli/` (15 个文件)
 - **配置文件**: `references/configs/*.json` (3 个文件)
 
 ---

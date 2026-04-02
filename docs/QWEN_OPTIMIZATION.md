@@ -10,7 +10,7 @@
 
 ### 1. ✅ Qwen LLM 引擎
 
-**文件**: `core/llm_engines/qwen.py`
+**文件**: `src/core/llm_engines/qwen.py`
 
 **核心功能**:
 ```python
@@ -39,7 +39,7 @@ class QwenLLMEngine(BaseLLMEngine):
 
 ### 2. ✅ Qwen Omni TTS 引擎
 
-**文件**: `core/tts_engines/qwen_omni.py`
+**文件**: `src/core/tts_engines/qwen_omni.py`
 
 **特点**:
 - **模型**: `qwen3-omni-flash`
@@ -77,7 +77,7 @@ class QwenOmniTTSEngine(BaseTTSEngine):
 
 ### 3. ✅ Qwen TTS 引擎
 
-**文件**: `core/tts_engines/qwen_tts.py`
+**文件**: `src/core/tts_engines/qwen_tts.py`
 
 **特点**:
 - **模型**: `qwen3-tts-flash`
@@ -128,7 +128,7 @@ class QwenTTSEngine(BaseTTSEngine):
 
 ### 4. ✅ API 客户端更新
 
-**文件**: `services/api_client.py`
+**文件**: `src/services/api_client.py`
 
 **新增**:
 ```python
@@ -148,10 +148,10 @@ class QwenClient(BaseAPIClient):
 
 ## 🏗️ 架构对比
 
-### 旧架构（scripts/studio/）
+### 旧架构（src/cli/）
 
 ```
-scripts/studio/
+src/cli/
 ├── qwen_omni_tts_tool.py    # Qwen Omni TTS
 ├── qwen_tts_tool.py          # Qwen TTS
 ├── qwen_omni_studio.py       # Qwen Omni Studio
@@ -193,7 +193,7 @@ services/
 ### 1. Qwen LLM 引擎
 
 ```python
-from core.llm_engines import QwenLLMEngine
+from src.core.llm_engines import QwenLLMEngine
 
 # 初始化
 engine = QwenLLMEngine(model="qwen3.5-flash")
@@ -212,7 +212,7 @@ if engine.is_available():
 ### 2. Qwen Omni TTS 引擎
 
 ```python
-from core.tts_engines import QwenOmniTTSEngine
+from src.core.tts_engines import QwenOmniTTSEngine
 
 # 初始化
 engine = QwenOmniTTSEngine()
@@ -229,7 +229,7 @@ engine.synthesize(
 ### 3. Qwen TTS 引擎
 
 ```python
-from core.tts_engines import QwenTTSEngine
+from src.core.tts_engines import QwenTTSEngine
 
 # 初始化
 engine = QwenTTSEngine()
@@ -289,7 +289,7 @@ class QwenOmniTTSEngine(BaseTTSEngine):
 
 **新代码**:
 ```python
-from services.audio_processor import normalize_volume
+from src.services.audio_processor import normalize_volume
 
 # 统一到 -18 dB
 normalize_volume("input.wav", "output.wav", target_dbfs=-18.0)
@@ -335,7 +335,7 @@ def synthesize(...):
 
 ## 🔄 向后兼容性
 
-- ✅ 旧代码（`scripts/studio/`）继续可用
+- ✅ 旧代码（`src/cli/`）继续可用
 - ✅ 新架构不影响现有功能
 - ✅ 可逐步迁移
 
@@ -346,11 +346,11 @@ def synthesize(...):
 ### 新增文件
 
 1. **LLM 引擎**
-   - `core/llm_engines/qwen.py`
+   - `src/core/llm_engines/qwen.py`
 
 2. **TTS 引擎**
-   - `core/tts_engines/qwen_omni.py`
-   - `core/tts_engines/qwen_tts.py`
+   - `src/core/tts_engines/qwen_omni.py`
+   - `src/core/tts_engines/qwen_tts.py`
 
 3. **示例**
    - `examples/qwen_engines_demo.py`
@@ -361,11 +361,11 @@ def synthesize(...):
 ### 更新文件
 
 1. **API 客户端**
-   - `services/api_client.py` - 添加流式生成
+   - `src/services/api_client.py` - 添加流式生成
 
 2. **模块导出**
-   - `core/llm_engines/__init__.py`
-   - `core/tts_engines/__init__.py`
+   - `src/core/llm_engines/__init__.py`
+   - `src/core/tts_engines/__init__.py`
 
 ---
 

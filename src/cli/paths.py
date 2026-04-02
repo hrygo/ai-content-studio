@@ -1,13 +1,13 @@
 """
 paths.py - AI Content Studio 共享路径配置
-统一管理项目路径，支持从 scripts/studio/ 子目录访问项目根目录资源
+统一管理项目路径，支持从 src/cli/ 子目录访问项目根目录资源
 """
 from pathlib import Path
 
-# 脚本所在目录（scripts/studio/）
+# 脚本所在目录（src/cli/）
 SCRIPT_DIR = Path(__file__).parent
 
-# 项目根目录（ai-content-studio/）
+# 项目根目录（ai-content-studio/）- 向上两级
 REPO_ROOT = SCRIPT_DIR.parent.parent
 
 # 运行时目录

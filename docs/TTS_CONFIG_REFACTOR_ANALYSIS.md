@@ -104,8 +104,8 @@ engine.synthesize(
 
 **调用方**：
 - `examples/qwen_engines_demo.py` - 示例代码，影响学习曲线
-- `scripts/studio/qwen_omni_studio.py` - 生产代码，需保持稳定
-- `scripts/studio/qwen_tts_studio.py` - 生产代码，需保持稳定
+- `src/cli/qwen_omni_studio.py` - 生产代码，需保持稳定
+- `src/cli/qwen_tts_studio.py` - 生产代码，需保持稳定
 
 ---
 
@@ -327,7 +327,7 @@ import logging
 
 from .base import BaseTTSEngine
 from .config import TTSConfig, MiniMaxTTSConfig
-from services.api_client import MiniMaxClient
+from src.services.api_client import MiniMaxClient
 
 logger = logging.getLogger(__name__)
 
@@ -537,7 +537,7 @@ engine.synthesize(
 )
 
 # ── 新代码（推荐） ──
-from core.tts_engines.config import QwenOmniTTSConfig
+from src.core.tts_engines.config import QwenOmniTTSConfig
 
 config = QwenOmniTTSConfig(
     text=text,
@@ -573,7 +573,7 @@ engine.synthesize(
 )
 
 # ── 新代码（类型安全 + IDE 自动补全） ──
-from core.tts_engines.config import MiniMaxTTSConfig
+from src.core.tts_engines.config import MiniMaxTTSConfig
 
 config = MiniMaxTTSConfig(
     text=text,
@@ -600,7 +600,7 @@ final_config = MiniMaxTTSConfig(
 engine.synthesize(final_config)
 ```
 
-#### 示例 3: 生产代码（scripts/studio/qwen_tts_studio.py）
+#### 示例 3: 生产代码（src/cli/qwen_tts_studio.py）
 ```python
 # ── 旧代码 ──
 success = engine.synthesize(
@@ -611,7 +611,7 @@ success = engine.synthesize(
 )
 
 # ── 新代码 ──
-from core.tts_engines.config import QwenTTSEngineConfig
+from src.core.tts_engines.config import QwenTTSEngineConfig
 
 config = QwenTTSEngineConfig(
     text=segment["text"],
@@ -631,7 +631,7 @@ success = engine.synthesize(config)
 ```python
 # tests/test_tts_config.py
 import pytest
-from core.tts_engines.config import (
+from src.core.tts_engines.config import (
     TTSConfig, MiniMaxTTSConfig, QwenOmniTTSConfig
 )
 
@@ -707,7 +707,7 @@ def test_config_immutability():
 
 def test_dict_to_config():
     """测试字典转配置对象"""
-    from core.tts_engines.minimax import MiniMaxTTSEngine
+    from src.core.tts_engines.minimax import MiniMaxTTSEngine
 
     engine = MiniMaxTTSEngine.__new__(MiniMaxTTSEngine)
 
@@ -728,8 +728,8 @@ def test_dict_to_config():
 # tests/integration/test_tts_engines.py
 import pytest
 from pathlib import Path
-from core.tts_engines import MiniMaxTTSEngine
-from core.tts_engines.config import MiniMaxTTSConfig
+from src.core.tts_engines import MiniMaxTTSEngine
+from src.core.tts_engines.config import MiniMaxTTSConfig
 
 
 @pytest.fixture
@@ -796,7 +796,7 @@ def test_backward_compatibility(minimax_engine, tmp_path):
 ```python
 # 性能测试脚本
 import timeit
-from core.tts_engines.config import MiniMaxTTSConfig
+from src.core.tts_engines.config import MiniMaxTTSConfig
 
 # 旧接口：直接传参
 def old_way():
@@ -873,7 +873,7 @@ print(f"性能差异: {(new_time - old_time) / old_time * 100:.1f}%")
 ### 9.1 时间线
 
 #### Sprint 1: 基础设施（1 周）
-- [ ] 创建 `core/tts_engines/config.py`
+- [ ] 创建 `src/core/tts_engines/config.py`
 - [ ] 定义 `TTSConfig` 和引擎特定配置类
 - [ ] 编写单元测试（覆盖率 > 90%）
 
@@ -885,8 +885,8 @@ print(f"性能差异: {(new_time - old_time) / old_time * 100:.1f}%")
 
 #### Sprint 3: 调用方迁移（1 周）
 - [ ] 更新 `examples/qwen_engines_demo.py`
-- [ ] 更新 `scripts/studio/qwen_omni_studio.py`
-- [ ] 更新 `scripts/studio/qwen_tts_studio.py`
+- [ ] 更新 `src/cli/qwen_omni_studio.py`
+- [ ] 更新 `src/cli/qwen_tts_studio.py`
 - [ ] 集成测试
 
 #### Sprint 4: 文档与发布（1 周）

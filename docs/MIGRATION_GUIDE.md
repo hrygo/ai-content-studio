@@ -29,13 +29,13 @@ ai-content-studio/
 │   ├── api_client.py        # 统一 API 客户端
 │   ├── config.py            # 配置管理
 │   └── audio_processor.py   # 音频处理服务
-├── scripts/studio/          # 旧代码（保留向后兼容）
+├── src/cli/          # 旧代码（保留向后兼容）
 └── config.example.json      # 配置文件示例
 ```
 
 ### 核心改进
 
-#### 1. 统一 API 客户端 (`services/api_client.py`)
+#### 1. 统一 API 客户端 (`src/services/api_client.py`)
 
 **优势**：
 - ✅ 自动重试（3 次，指数退避）
@@ -45,7 +45,7 @@ ai-content-studio/
 
 **使用示例**：
 ```python
-from services.api_client import create_minimax_client
+from src.services.api_client import create_minimax_client
 
 client = create_minimax_client()
 
@@ -65,7 +65,7 @@ text = client.generate_text(
 print(client.get_stats())
 ```
 
-#### 2. 配置管理 (`services/config.py`)
+#### 2. 配置管理 (`src/services/config.py`)
 
 **优势**：
 - ✅ JSON 配置文件支持
@@ -74,7 +74,7 @@ print(client.get_stats())
 
 **使用示例**：
 ```python
-from services.config import get_config
+from src.services.config import get_config
 
 config = get_config("config.json")
 
@@ -87,7 +87,7 @@ if config.is_engine_enabled("minimax"):
     print("MiniMax 引擎可用")
 ```
 
-#### 3. 音频标准化 (`services/audio_processor.py`)
+#### 3. 音频标准化 (`src/services/audio_processor.py`)
 
 **优势**：
 - ✅ 统一音量到 -18 dB
@@ -97,7 +97,7 @@ if config.is_engine_enabled("minimax"):
 
 **使用示例**：
 ```python
-from services.audio_processor import AudioProcessor
+from src.services.audio_processor import AudioProcessor
 
 processor = AudioProcessor()
 
@@ -150,7 +150,7 @@ processor.add_bgm(
 
 ### 第二步：使用新 API 客户端
 
-**旧代码**（scripts/studio/minimax_tts_tool.py）：
+**旧代码**（src/cli/minimax_tts_tool.py）：
 ```python
 import requests
 from config_utils import load_api_key
@@ -162,7 +162,7 @@ response = requests.post(url, headers={...}, json=payload)
 
 **新代码**（services/api_client.py）：
 ```python
-from services.api_client import create_minimax_client
+from src.services.api_client import create_minimax_client
 
 client = create_minimax_client()
 audio_bytes = client.text_to_speech(text="你好")
@@ -175,7 +175,7 @@ audio_bytes = client.text_to_speech(text="你好")
 
 **新代码**：
 ```python
-from services.audio_processor import normalize_volume
+from src.services.audio_processor import normalize_volume
 
 # 统一音量到 -18 dB
 normalize_volume("input.mp3", "output.mp3")
@@ -239,7 +239,7 @@ class QwenLLMEngine(BaseLLMEngine):
 
 ## ⚠️ 向后兼容性
 
-- ✅ 旧代码（scripts/studio/）继续可用
+- ✅ 旧代码（src/cli/）继续可用
 - ✅ 新架构不影响现有功能
 - ✅ 可逐步迁移
 
@@ -260,9 +260,9 @@ class QwenLLMEngine(BaseLLMEngine):
 ## 📞 技术支持
 
 如有问题，请查看：
-- `services/api_client.py` - API 客户端源码
-- `services/config.py` - 配置管理源码
-- `services/audio_processor.py` - 音频处理源码
+- `src/services/api_client.py` - API 客户端源码
+- `src/services/config.py` - 配置管理源码
+- `src/services/audio_processor.py` - 音频处理源码
 - `config.example.json` - 配置示例
 
 ---

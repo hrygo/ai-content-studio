@@ -24,11 +24,11 @@
 
 ```python
 # Before
-from core.tts_engines.qwen_tts import QwenTTSEngine
+from src.core.tts_engines.qwen_tts import QwenTTSEngine
 
 # After
-from core.tts_engines.qwen_tts import QwenTTSEngine
-from core.enums import LanguageCode,  # 新增
+from src.core.tts_engines.qwen_tts import QwenTTSEngine
+from src.core.enums import LanguageCode,  # 新增
 ```
 
 ### Step 1.2: 使用枚举常量
@@ -77,7 +77,7 @@ language = LanguageCode.from_string(config["language"])
 pytest tests/test_qwen_tts.py
 
 # 检查日志（应无警告）
-python scripts/studio/qwen_tts_tool.py --text "测试" --voice cherry
+python src/cli/qwen_tts_tool.py --text "测试" --voice cherry
 ```
 
 ---
@@ -108,7 +108,7 @@ python scripts/studio/qwen_tts_tool.py --text "测试" --voice cherry
 ```python
 # services/config.py
 from pydantic import BaseModel, validator
-from core.enums import LanguageCode
+from src.core.enums import LanguageCode
 
 class RoleConfig(BaseModel):
     voice: str
@@ -118,7 +118,7 @@ class RoleConfig(BaseModel):
     @validator("emotion")
     def validate_emotion(cls, v):
         """验证情感值是否有效"""
-        from core.enums import EmotionType
+        from src.core.enums import EmotionType
         try:
             EmotionType.from_string(v)
             return v
@@ -139,7 +139,7 @@ class RoleConfig(BaseModel):
 ```bash
 # 测试配置加载
 python -c "
-from services.config import ConfigManager
+from src.services.config import ConfigManager
 cfg = ConfigManager('config.example.json')
 print(cfg.engines['qwen'].voice)  # 应该是 QwenVoiceID 枚举
 "
@@ -227,7 +227,7 @@ def synthesize(self, text: str, voice: str = "cherry", language: str = "Auto"):
     # ...
 
 # After (Phase 1)
-from core.enums import QwenVoiceID, LanguageCode
+from src.core.enums import QwenVoiceID, LanguageCode
 
 def synthesize(
     self,
@@ -245,7 +245,7 @@ def synthesize(
 
 ### 场景 2: CLI 参数解析
 ```python
-# scripts/studio/qwen_tts_tool.py
+# src/cli/qwen_tts_tool.py
 
 # Before
 import click
@@ -257,7 +257,7 @@ def main(language: str, voice: str):
 
 # After (Phase 1)
 import click
-from core.enums import LanguageCode, QwenVoiceID
+from src.core.enums import LanguageCode, QwenVoiceID
 
 @click.option(
     "--language",
@@ -288,7 +288,7 @@ with open("config.json") as f:
     voice = config["voice"]  # 字符串 "cherry"
 
 # After (Phase 1)
-from core.enums import QwenVoiceID
+from src.core.enums import QwenVoiceID
 
 with open("config.json") as f:
     config = json.load(f)
@@ -303,7 +303,7 @@ with open("config.json") as f:
 ```python
 # tests/test_enums.py
 import pytest
-from core.enums import LanguageCode, EmotionType, QwenVoiceID
+from src.core.enums import LanguageCode, EmotionType, QwenVoiceID
 
 def test_language_code_from_string():
     assert LanguageCode.from_string("zh") == LanguageCode.ZH
@@ -370,7 +370,7 @@ def test_synthesis_with_string_backward_compat():
 **解决**:
 ```python
 # 检查是否正确导入
-from core.enums import LanguageCode
+from src.core.enums import LanguageCode
 
 # 检查值是否正确
 print([v.value for v in LanguageCode])  # 应该包含 "zh"
@@ -386,7 +386,7 @@ assert LanguageCode.ZH.value == "zh"
 ```python
 # 枚举继承 str，可以直接序列化
 import json
-from core.enums import QwenVoiceID
+from src.core.enums import QwenVoiceID
 
 voice = QwenVoiceID.CHERRY
 json_str = json.dumps({"voice": voice})  # 自动使用 voice.value
@@ -409,7 +409,7 @@ process(QwenVoiceID.CHERRY)  # mypy 错误
 
 # After
 from typing import Union
-from core.enums import QwenVoiceID
+from src.core.enums import QwenVoiceID
 
 def process(voice: Union[str, QwenVoiceID]):
     if isinstance(voice, QwenVoiceID):
@@ -448,7 +448,7 @@ process(QwenVoiceID.CHERRY)  # OK
 ## 参考资料
 
 - **设计文档**: `docs/STRINGLY_TYPED_CODE_ANALYSIS.md`
-- **枚举实现**: `core/enums.py`
+- **枚举实现**: `src/core/enums.py`
 - **使用示例**: `examples/enums_usage_demo.py`
 - **API 文档**: `docs/API_REFERENCE.md` (待创建)
 
@@ -457,7 +457,7 @@ process(QwenVoiceID.CHERRY)  # OK
 ## 需要帮助？
 
 如果在迁移过程中遇到问题：
-1. 检查 `core/enums.py` 中的 `from_string` 方法实现
+1. 检查 `src/core/enums.py` 中的 `from_string` 方法实现
 2. 查看测试用例 `tests/test_enums.py`
 3. 参考示例 `examples/enums_usage_demo.py`
 

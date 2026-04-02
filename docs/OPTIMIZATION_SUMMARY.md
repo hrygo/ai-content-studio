@@ -9,16 +9,16 @@
 ### 1. ✅ 架构重构（高优先级）
 
 **改进**：
-- 建立清晰的分层架构：`core/` + `services/`
-- LLM 引擎抽象：`core/llm_engines/`
-- TTS 引擎抽象：`core/tts_engines/`
-- 统一服务层：`services/`
+- 建立清晰的分层架构：`src/core/` + `src/services/`
+- LLM 引擎抽象：`src/core/llm_engines/`
+- TTS 引擎抽象：`src/core/tts_engines/`
+- 统一服务层：`src/services/`
 
 **文件**：
-- `core/llm_engines/base.py` - LLM 引擎基类
-- `core/llm_engines/minimax.py` - MiniMax LLM 实现
-- `core/tts_engines/base.py` - TTS 引擎基类
-- `core/tts_engines/minimax.py` - MiniMax TTS 实现
+- `src/core/llm_engines/base.py` - LLM 引擎基类
+- `src/core/llm_engines/minimax.py` - MiniMax LLM 实现
+- `src/core/tts_engines/base.py` - TTS 引擎基类
+- `src/core/tts_engines/minimax.py` - MiniMax TTS 实现
 
 **收益**：
 - ✅ 代码组织更清晰
@@ -36,7 +36,7 @@
 - 调用统计追踪
 
 **文件**：
-- `services/api_client.py`
+- `src/services/api_client.py`
 
 **核心功能**：
 ```python
@@ -68,7 +68,7 @@ class MiniMaxClient(BaseAPIClient):
 - BGM 混音支持
 
 **文件**：
-- `services/audio_processor.py`
+- `src/services/audio_processor.py`
 
 **核心功能**：
 ```python
@@ -109,7 +109,7 @@ class AudioProcessor:
 - 统计信息追踪
 
 **文件**：
-- `services/api_client.py`
+- `src/services/api_client.py`
 
 **错误处理示例**：
 ```python
@@ -149,7 +149,7 @@ def _request(...):
 - 配置热加载
 
 **文件**：
-- `services/config.py`
+- `src/services/config.py`
 - `config.example.json`
 
 **配置示例**：
@@ -169,7 +169,7 @@ def _request(...):
 
 **使用示例**：
 ```python
-from services.config import get_config
+from src.services.config import get_config
 
 config = get_config("config.json")
 api_key = config.get_api_key("minimax")
@@ -226,10 +226,10 @@ class StreamPipeline:
 
 ## 🏗️ 新架构 vs 旧架构
 
-### 旧架构（scripts/studio/）
+### 旧架构（src/cli/）
 
 ```
-scripts/studio/
+src/cli/
 ├── minimax_tts_tool.py
 ├── qwen_tts_tool.py
 ├── studio_orchestrator.py
@@ -255,7 +255,7 @@ ai-content-studio/
 │   ├── api_client.py        # 统一 API 客户端
 │   ├── config.py            # 配置管理
 │   └── audio_processor.py   # 音频处理
-├── scripts/studio/          # 旧代码（向后兼容）
+├── src/cli/          # 旧代码（向后兼容）
 └── examples/                # 使用示例
 ```
 
@@ -320,8 +320,8 @@ def tts_synthesis_thread():
 
 2. **使用新架构**：
    ```python
-   from services.api_client import create_minimax_client
-   from services.audio_processor import normalize_volume
+   from src.services.api_client import create_minimax_client
+   from src.services.audio_processor import normalize_volume
 
    # API 调用
    client = create_minimax_client()
@@ -340,7 +340,7 @@ def tts_synthesis_thread():
 
 ## 🔄 向后兼容性
 
-- ✅ 旧代码（scripts/studio/）继续可用
+- ✅ 旧代码（src/cli/）继续可用
 - ✅ 新架构不影响现有功能
 - ✅ 可逐步迁移
 
