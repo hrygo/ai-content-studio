@@ -3,167 +3,203 @@ name: ai-content-studio
 description: |
   AI Content Studio — 专业级 AI 音频内容创作工具。
   **立即激活本 skill**，当用户请求以下任何操作时：
-  - 把文字内容做成播客音频 / 对话节目
+  - 把文字做成播客音频 / 对话节目 / 专家访谈
   - 生成 TTS 语音 / 文本转语音 / 文字转音频
   - 多角色对话脚本 + 语音合成
-  - 辩论节目 / 专家评论 / 新闻播报音频
-  - 写播客脚本 / 对话脚本并合成语音
+  - 辩论节目 / 新闻播报 / 摘要播客
   - 上传文章/报告生成语音播客
-  触发词：播客、TTS、语音合成、文本转音频、文字转语音、对话音频、辩论节目、语音播客、Podcast
+  - 批量文本转语音
+  触发词：播客、TTS、语音合成、文本转音频、文字转语音、对话音频、辩论节目、语音播客、Podcast、多角色语音、AI播客、批量语音
 compatibility:
   tools:
     - ffmpeg
   env:
-    - DASHSCOPE_API_KEY
-    - MINIMAX_API_KEY
+    - MINIMAX_API_KEY + MINIMAX_GROUP_ID
+    - QWEN_API_KEY (或 DASHSCOPE_API_KEY)
 ---
 
 # AI Content Studio
 
-专业级 AI 音频内容创作工具。三引擎编排（MiniMax → Qwen TTS → Qwen Omni），通过 LLM 编排播客脚本 + 高保真语音合成，生成广播级立体声音频。
+专业级 AI 音频内容创作工具。基于 Clean Architecture（三引擎编排），支持单文本 TTS、多角色对话脚本、AI 播客全流程生成。
 
-**Fallback 链路**: `MiniMax → Qwen TTS → Qwen Omni`（全部失败才报错）
-
----
-
-## 场景触发 → 命令生成
-
-用户请求内容转音频时，按以下流程快速定位正确命令：
-
-### 第一步：判断场景
-
-| 用户意图关键词 | 推荐模式 | 典型输出 |
-|---------------|---------|---------|
-| "播客/对话/聊聊/讨论" | `--mode deep_dive` | 两人深度对谈，含提问与反驳 |
-| "摘要/播报/总结一下" | `--mode summary` | 单人专业简报，清晰简洁 |
-| "评论/点评/优缺点" | `--mode review` | 含优缺点的专家评析 |
-| "辩论/正反方/对辩" | `--mode debate` | 正反方对辩，主持人引导 |
-
-> **默认**：用户未指定模式时，使用 `--mode deep_dive`
-
-### 第二步：组装命令
-
-```bash
-# 标准命令（直接运行）
-cd src/cli
-python studio_orchestrator.py \
-  --source "你的内容.txt" \
-  --mode <选定的模式> \
-  --stereo \       # 建议始终开启，不同角色左右声道分离
-  -o output.mp3
-```
-
-### 第三步：按需增强
-
-| 选项 | 何时使用 | 示例 |
-|------|---------|------|
-| `--bgm music.mp3` | 添加背景音乐 | 轻柔纯音乐，人声时自动压低音量 |
-| `--engine <engine>` | 指定单一引擎 | `minimax`（推荐）/ `qwen_tts` / `qwen` |
-| `--engine auto` | 自动 Fallback | 三个引擎依次尝试（默认行为） |
-| `--roles <config>` | 自定义角色音色 | 参考 `references/configs_guide.md` |
+**架构层次**：
+- `entities/` — 核心数据实体（TTSRequest、AudioSegment、EngineResult）
+- `use_cases/` — 业务用例（合成、对话、播客、批量）
+- `adapters/` — 引擎适配器（MiniMax / Qwen TTS / Qwen Omni / LLM）
+- `infrastructure/` — CLI、依赖注入容器、配置管理
 
 ---
 
-## 命令速查
+## 快速开始
 
-### 一句话跑通
+安装后即可使用 `ai-studio` CLI：
+
 ```bash
-cd src/cli && python studio_orchestrator.py --source "文本.txt" --stereo -o out.mp3
+# 安装 skill
+bash scripts/install.sh
+
+# 一句话跑通（AI 播客）
+ai-studio studio --topic "人工智能的未来" -o podcast.mp3
+
+# 对话脚本 TTS
+ai-studio dialogue --source dialogue.txt -o dialogue.mp3
+
+# 单文本 TTS
+ai-studio synthesize --source "你好世界" -o hello.mp3
+
+# 批量合成
+ai-studio batch --segments "你好|cherry,世界|ethan" -o batch.mp3
 ```
 
-### 指定引擎
+---
+
+## 命令参考
+
+### ai-studio synthesize
+
+单文本 TTS 合成（绕过 LLM，直接合成已有文本）。
+
 ```bash
-python studio_orchestrator.py --source "文本" --engine minimax   # MiniMax（推荐）
-python studio_orchestrator.py --source "文本" --engine qwen_tts  # Qwen TTS（49音色）
-python studio_orchestrator.py --source "文本" --engine qwen      # Qwen Omni（单文本）
-python studio_orchestrator.py --source "文本" --engine auto       # 自动 Fallback
+ai-studio synthesize --source "待合成文本" -o output.mp3 [OPTIONS]
+
+OPTIONS:
+  --engine {minimax|qwen_tts|qwen_omni|qwen}  引擎，默认 minimax
+  --voice VOICE_ID                                   音色 ID
+  --speed 0.5-2.0                                   语速，默认 1.0
+  --emotion {neutral|happy|sad|angry|calm|surprised|fearful|disgusted|fluent}
+  --format {mp3|wav}                                 默认 mp3
 ```
 
-### 引擎状态检查
+**示例**：
 ```bash
-cd scripts/studio && python studio_orchestrator.py --check
-```
-
-### 背景音乐 + 立体声
-```bash
-python studio_orchestrator.py --source "文本.txt" --stereo --bgm ambient.mp3 -o out.mp3
-```
-
-### 独立 TTS（直接合成已有脚本，绕过 LLM）
-```bash
-# MiniMax
-python minimax_tts_tool.py -s dialogue.txt -r ../../references/configs/studio_roles.json --stereo -o out.mp3
-
-# Qwen TTS Studio
-python qwen_tts_studio.py --source "文本.txt" -r ../../references/configs/qwen_voices.json -o out.mp3
+# MiniMax 指定音色
+ai-studio synthesize --source "欢迎收听本期节目" --voice female-tianmei --speed 1.2 -o intro.mp3
 
 # Qwen Omni
-python qwen_omni_tts_tool.py "待合成文本" -o output.wav -v cherry
+ai-studio synthesize --source "这是一段测试音频" --engine qwen_omni --voice cherry -o test.mp3
 ```
 
-### 运行测试
-```bash
-python tests/test_minimax_tts.py
-python tests/test_qwen_omni_tts.py
-```
+### ai-studio dialogue
 
----
-
-## 对话脚本格式
-
-直接合成已有脚本时使用此格式（`[role, emotion]: text`）：
-
-```txt
-[Alex, curious]: 这项技术的核心原理是什么？
-[Sam, skeptical]: 我认为这个方向还很不成熟。
-[Alex, excited]: 但最新实验数据显示...
-```
-
-- `role` 必须在角色库（`references/configs/studio_roles.json` / `references/configs/qwen_voices.json`）中定义
-- `emotion` 可选，默认 `neutral`；MiniMax 支持：`happy`, `calm`, `angry`, `sad`
-- 角色切换自动插入 0.2s 停顿（`--pause` 可调）
-
----
-
-## 典型命令示例
+对话脚本解析 + 多角色 TTS 合成。自动分配立体声声道（不同角色左右分离）。
 
 ```bash
-# 深度播客（最常用）
-python studio_orchestrator.py \
-  --source "文章.txt" \
-  --mode deep_dive \
-  --stereo \
-  --bgm ambient.mp3 \
-  -o "播客.mp3"
+ai-studio dialogue --source DIALOGUE.txt -o output.mp3 [OPTIONS]
 
-# 快速摘要
-python studio_orchestrator.py \
-  --source "报告.txt" \
-  --mode summary \
-  -o "摘要.mp3"
+OPTIONS:
+  --source FILE                   对话脚本文件（支持文件路径或直接文本）
+  --engine {minimax|qwen_tts|...} TTS 引擎
+  --roles ROLES.json              角色音色映射（可选）
+  --bgm MUSIC.mp3                  背景音乐（可选）
+```
 
-# 辩论节目
-python studio_orchestrator.py \
-  --source "争议话题.txt" \
-  --mode debate \
-  --stereo \
-  -o "辩论.mp3"
+**对话脚本格式**：
+```
+[Speaker]: 文本内容
+[Speaker, emotion]: 带情感标记的文本
+```
+
+支持同行多角色（无换行分隔）：
+```
+[Alex]: 你好[Sam]: 你好 Alex
+```
+
+- `Speaker` — 角色名，自动映射到音色
+- `emotion` — 可选，MiniMax 支持情感参数
+
+**示例**：
+```bash
+# 自动音色分配（轮询 cherry/ethan/chelsie）
+ai-studio dialogue --source podcast.txt -o podcast.mp3
+
+# 自定义角色音色
+ai-studio dialogue --source podcast.txt --roles roles.json -o podcast.mp3
+
+# 加背景音乐
+ai-studio dialogue --source podcast.txt --bgm ambient.mp3 -o podcast_bgm.mp3
+```
+
+**roles.json 示例**：
+```json
+{
+  "Alex": {"voice": "cherry", "speed": 1.1},
+  "Sam": {"voice": "ethan", "speed": 0.95}
+}
+```
+
+### ai-studio studio
+
+LLM 生成播客脚本 → TTS 合成 → FFmpeg 混音，全自动一条龙。
+
+```bash
+ai-studio studio --topic "播客主题" -o output.mp3 [OPTIONS]
+
+OPTIONS:
+  --llm {minimax|qwen}           LLM 引擎（生成脚本），默认 minimax
+  --tts {minimax|qwen_tts|...}  TTS 引擎（合成语音），默认 minimax
+  --roles ROLES.json             角色音色映射
+  --bgm MUSIC.mp3                背景音乐
+```
+
+**示例**：
+```bash
+# 最常用：MiniMax 全套
+ai-studio studio --topic "人工智能的未来" -o ai_podcast.mp3
+
+# Qwen LLM + MiniMax TTS
+ai-studio studio --topic "量子计算原理" --llm qwen --tts minimax -o quantum.mp3
+
+# 加背景音乐
+ai-studio studio --topic "产品发布会" --bgm ambient.mp3 -o launch.mp3
+```
+
+### ai-studio batch
+
+批量文本片段 TTS + FFmpeg 自动合并为单一音频文件。
+
+```bash
+ai-studio batch --segments "文本1|音色1,文本2|音色2,..." -o output.mp3 [OPTIONS]
+
+OPTIONS:
+  --engine {minimax|qwen_tts|...}  TTS 引擎
+```
+
+片段之间自动插入 0.5s 静音间隔。
+
+**示例**：
+```bash
+ai-studio batch \
+  --segments "开头语|cherry,主要内容|ethan,结束语|chelsie" \
+  -o episode.mp3
 ```
 
 ---
 
 ## API 配置
 
-从 `~/.config/opencode/opencode.json` 自动读取：
-- `provider.bailian` → Qwen（DASHSCOPE_API_KEY + baseURL）
-- `provider.minimax` → MiniMax（MINIMAX_API_KEY）
+**优先级**：环境变量 > `~/.config/opencode/opencode.json`（向后兼容）
 
-环境变量覆盖：
 ```bash
-export DASHSCOPE_API_KEY="..."
+# MiniMax（需要同时设置两个）
 export MINIMAX_API_KEY="..."
-export MINIMAX_LLM_API_URL="..."   # MiniMax LLM API URL（可选）
-export MINIMAX_TTS_API_URL="..."   # MiniMax TTS API URL（可选）
+export MINIMAX_GROUP_ID="..."
+
+# Qwen / DashScope（二选一）
+export QWEN_API_KEY="..."
+export DASHSCOPE_API_KEY="..."        # 等效，别名
+
+# 可选：自定义 Base URL
+export DASHSCOPE_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
+```
+
+`opencode.json` 结构：
+```json
+{
+  "provider": {
+    "minimax": {"options": {"apiKey": "...", "groupId": "..."}},
+    "bailian": {"options": {"apiKey": "...", "baseURL": "..."}}
+  }
+}
 ```
 
 ---
@@ -172,32 +208,26 @@ export MINIMAX_TTS_API_URL="..."   # MiniMax TTS API URL（可选）
 
 | 问题 | 解决方案 |
 |------|---------|
-| `MarkupError` / Rich 标签错误 | 路径字符串中的 `[]` 未转义；确保 `[` 不被 rich 解析为标签 |
 | `ffmpeg: command not found` | `brew install ffmpeg`（macOS）或 `sudo apt install ffmpeg`（Linux）|
-| TTS 返回 `1001`/`1013`/`1021` | 业务限流，tenacity 自动重试 3 次，无需干预 |
-| TTS 返回其他非零码 | 触发 Fallback 到下一个引擎 |
-| Qwen Omni 生成多余文本 | Omni 全模态模型附带非音频元数据；后处理已自动过滤 |
-
-详细故障排查：`references/troubleshooting.md`
-
----
-
-## 参考文档
-
-| 文档 | 用途 |
-|------|------|
-| `references/user_manual.md` | 面向终端用户的完整场景引导（四大场景详解、角色定制、FAQ） |
-| `references/configs_guide.md` | 角色库配置详解（36+ 音色、自定义角色、高级参数） |
-| `references/troubleshooting.md` | 故障排查（错误码、API 问题、FFmpeg） |
-| `references/configs/` | 预置角色库 JSON 文件 |
+| `ContainerInitializationError` | 检查 API Key 环境变量是否设置 |
+| TTS 返回 1001/1013/1023 | 业务限流，tenacity 自动重试 3 次 |
+| Qwen Omni 输出含多余文本 | Omni 全模态模型附带非音频元数据，已自动过滤 |
+| 脚本解析失败 | 确保格式为 `[Speaker]: 文本`，方括号要紧邻冒号 |
+| `ModuleNotFoundError: src.xxx` | 重新安装：`pip install -e .` |
 
 ---
 
-## 安装 Skill
+## 安装与维护
 
 ```bash
-bash scripts/install.sh        # 安装到 ~/.claude/skills/ai-content-studio/
-bash scripts/install.sh --uninstall  # 卸载
+# 安装 / 更新
+bash scripts/install.sh
+
+# 卸载
+bash scripts/install.sh --uninstall
+
+# 运行测试
+python -m pytest tests/ -q
 ```
 
-详见 `INSTALL.md`。
+安装后 `ai-studio` 命令全局可用。Python 包安装路径：`pip show ai-content-studio`
