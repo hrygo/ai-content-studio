@@ -307,12 +307,34 @@ install_skill() {
     # 自动安装 Python 依赖
     if [[ -f "${SKILL_DEST}/pyproject.toml" ]]; then
         echo "  → 安装 Python 依赖..."
-        # 使用 pip install -e . 安装可编辑模式（含 ai-studio CLI 入口）
-        if ! python3 -m pip install -e "${SKILL_DEST}" &>/dev/null; then
-            echo "  ! 警告：无法自动安装 Python 依赖。请手动执行："
-            echo "    python3 -m pip install -e \"${SKILL_DEST}\""
-        else
+
+        # 安装函数：支持镜像回退
+        install_deps() {
+            local flags="--break-system-packages --quiet"
+
+            # 尝试 1: 使用默认镜像（pip.conf 配置）
+            if python3 -m pip install -e "${SKILL_DEST}" $flags 2>/dev/null; then
+                return 0
+            fi
+
+            # 尝试 2: 回退到官方 PyPI（解决国内镜像 403 问题）
+            echo "  ! 默认镜像失败，切换到官方 PyPI..."
+            if python3 -m pip install -e "${SKILL_DEST}" $flags \
+                --index-url https://pypi.org/simple 2>/dev/null; then
+                return 0
+            fi
+
+            return 1
+        }
+
+        # 执行安装
+        if install_deps; then
             echo "  ✓ Python 依赖安装完成（ai-studio CLI 已注册）"
+        else
+            echo "  ✗ 自动安装失败。请手动执行："
+            echo "    python3 -m pip install -e \"${SKILL_DEST}\" \\"
+            echo "      --break-system-packages \\"
+            echo "      --index-url https://pypi.org/simple"
         fi
     fi
 

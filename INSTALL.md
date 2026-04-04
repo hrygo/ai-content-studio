@@ -382,6 +382,67 @@ done
 | `rich` | >=13.0.0 | 进度条和富文本输出 |
 | `cachetools` | >=5.0.0 | 结果缓存（避免重复请求） |
 
+**常见安装问题**：
+
+<details>
+<summary><b>问题 1: 国内镜像返回 403 错误</b></summary>
+
+某些国内 PyPI 镜像（如清华源）可能返回 HTTP 403 错误：
+
+```
+ERROR: HTTP error 403 while getting https://pypi.tuna.tsinghua.edu.cn/...
+ERROR: Could not install requirement setuptools>=61.0
+```
+
+**解决方案**：使用官方 PyPI 镜像
+
+```bash
+python3 -m pip install -e "${SKILL_DIR}" \
+    --break-system-packages \
+    --index-url https://pypi.org/simple
+```
+
+</details>
+
+<details>
+<summary><b>问题 2: macOS 系统包保护错误</b></summary>
+
+macOS Python 3.14+ 默认禁止系统级包安装：
+
+```
+error: externally-managed-environment
+× This environment is externally managed
+```
+
+**解决方案**：添加 `--break-system-packages` 标志
+
+```bash
+python3 -m pip install -e "${SKILL_DIR}" \
+    --break-system-packages
+```
+
+> **说明**：`--break-system-packages` 标志允许 pip 绕过系统包管理保护，适用于开发者环境。
+
+</details>
+
+<details>
+<summary><b>问题 3: 自动安装失败</b></summary>
+
+安装脚本会自动尝试两次：
+1. 使用默认镜像（pip.conf 配置）
+2. 回退到官方 PyPI（解决 403 问题）
+
+如果仍然失败，请手动执行：
+
+```bash
+SKILL_DIR="${HOME}/.agents/skills/ai-content-studio"
+python3 -m pip install -e "$SKILL_DIR" \
+    --break-system-packages \
+    --index-url https://pypi.org/simple
+```
+
+</details>
+
 ### 8.4 语音处理库（进阶）
 
 以下库为可选，用于增强本地音频处理能力：
