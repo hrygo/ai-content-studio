@@ -211,9 +211,60 @@ uninstall_skill() {
 }
 
 #────────────────────────────────────────────────────────────────────────────
+# 依赖检测
+#────────────────────────────────────────────────────────────────────────────
+check_dependencies() {
+    echo "→ 检查系统依赖..."
+
+    local missing_deps=()
+
+    # 检查 Python 3
+    if ! command -v python3 &>/dev/null; then
+        missing_deps+=("python3")
+        echo "  ✗ Python 3 未安装"
+    else
+        local python_version
+        python_version=$(python3 --version 2>&1 | awk '{print $2}')
+        echo "  ✓ Python ${python_version}"
+    fi
+
+    # 检查 pip
+    if ! python3 -m pip --version &>/dev/null; then
+        missing_deps+=("pip")
+        echo "  ✗ pip 未安装"
+    else
+        echo "  ✓ pip 可用"
+    fi
+
+    # 检查 ffmpeg（可选，用于音频处理）
+    if ! command -v ffmpeg &>/dev/null; then
+        echo "  ⚠ ffmpeg 未安装（音频处理功能将受限）"
+        echo "    安装命令："
+        echo "      macOS:  brew install ffmpeg"
+        echo "      Linux:  sudo apt install ffmpeg"
+    else
+        local ffmpeg_version
+        ffmpeg_version=$(ffmpeg -version 2>&1 | head -1 | awk '{print $3}')
+        echo "  ✓ ffmpeg ${ffmpeg_version}"
+    fi
+
+    if [[ ${#missing_deps[@]} -gt 0 ]]; then
+        echo ""
+        echo "✗ 缺少必需依赖：${missing_deps[*]}"
+        echo "  请先安装这些依赖后再运行安装脚本。"
+        exit 1
+    fi
+
+    echo ""
+}
+
+#────────────────────────────────────────────────────────────────────────────
 # 安装
 #────────────────────────────────────────────────────────────────────────────
 install_skill() {
+    # 检查依赖
+    check_dependencies
+
     if [[ ! -f "${REPO_ROOT}/SKILL.md" ]] || [[ ! -d "${REPO_ROOT}/src" ]]; then
         echo "✗ 错误：找不到 SKILL.md 或 src/ 目录"
         echo "  请确保在 ai-content-studio 项目根目录运行此脚本。"

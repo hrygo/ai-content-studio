@@ -90,10 +90,13 @@ class BaseAPIClient:
         }
 
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
+        stop=stop_after_attempt(5),  # 增加到 5 次重试
+        wait=wait_exponential(multiplier=2, min=2, max=60),  # 指数退避，最大 60 秒
         retry=retry_if_exception_type((RateLimitError, requests.exceptions.RequestException)),
-        before_sleep=lambda retry_state: logger.warning(f"重试 {retry_state.attempt_number}/3...")
+        before_sleep=lambda retry_state: logger.warning(
+            f"速率限制或网络错误，第 {retry_state.attempt_number}/5 次重试，"
+            f"等待 {retry_state.next_action.sleep:.1f} 秒..."
+        )
     )
     def _request(self, method: str, url: str, **kwargs) -> requests.Response:
         """统一请求方法，带重试机制"""
@@ -209,8 +212,13 @@ class MiniMaxClient(BaseAPIClient):
             base_resp = result.get("base_resp", {})
             status_code = base_resp.get("status_code")
 
-            if status_code in [1001, 1013, 1021]:
-                raise RateLimitError(f"Business rate limited ({status_code})")
+            # 速率限制错误码（需要重试）
+            # 1001, 1013, 1021: 标准 rate limit
+            # 2056: usage limit exceeded (短时间内调用过多)
+            if status_code in [1001, 1013, 1021, 2056]:
+                retry_msg = f"Rate limited (status_code: {status_code}, msg: {base_resp.get('status_msg')})"
+                logger.warning(retry_msg)
+                raise RateLimitError(retry_msg)
 
             if status_code != 0:
                 raise APIResponseError(f"API 返回错误码: {status_code}, 消息: {base_resp.get('status_msg')}")

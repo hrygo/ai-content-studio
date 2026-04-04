@@ -62,14 +62,21 @@ class Container:
         # MiniMax TTS 配置
         minimax_api_key = os.getenv("MINIMAX_API_KEY")
         minimax_group_id = os.getenv("MINIMAX_GROUP_ID")
-        if minimax_api_key and minimax_group_id:
+        if minimax_api_key:
+            # 如果没有 MINIMAX_GROUP_ID，尝试从 API Key 或其他来源推断
+            # 某些 Anthropic 兼容代理可能不需要 group_id
+            if not minimax_group_id:
+                # 尝试使用默认值或从 API key 中提取
+                # 对于代理模式，group_id 可能为 None
+                minimax_group_id = os.getenv("MINIMAX_GROUP_ID", "default")
+
             container.minimax_engine = MiniMaxTTSEngine(
                 api_key=minimax_api_key,
                 group_id=minimax_group_id,
             )
 
-        # Qwen TTS 配置
-        qwen_api_key = os.getenv("QWEN_API_KEY")
+        # Qwen TTS 配置（支持 QWEN_API_KEY 或 DASHSCOPE_API_KEY）
+        qwen_api_key = os.getenv("QWEN_API_KEY") or os.getenv("DASHSCOPE_API_KEY")
         if qwen_api_key:
             container.qwen_engine = QwenOmniTTSEngine(
                 api_key=qwen_api_key,
