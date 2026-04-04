@@ -17,12 +17,16 @@
 #   ~/.config/opencode/skills/ai-content-studio  OpenCode 兼容（符号链接）
 #   ~/.openclaw/skills/ai-content-studio     OpenClaw 兼容（符号链接）
 #
-# Skill Bundle 结构：
-#   SKILL.md           ← 主入口
+# Skill Bundle 结构（Clean Architecture 重构后）：
+#   SKILL.md           ← Skill 主入口（Claude Code skill 识别文件）
 #   pyproject.toml     ← Python 包配置（pip install -e .）
+#   requirements.txt   ← pip 依赖清单（可选）
+#   scripts/install.sh ← 安装脚本（安装到目标后保留，用于卸载/重装）
+#   README.md / INSTALL.md ← 文档
 #   src/               ← Clean Architecture 源码
 #   tests/             ← 测试套件
 #   docs/              ← 文档
+#   references/        ← 角色库配置
 #────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -237,12 +241,29 @@ install_skill() {
     cp "${REPO_ROOT}/SKILL.md" "${SKILL_DEST}/SKILL.md"
     cp "${REPO_ROOT}/pyproject.toml" "${SKILL_DEST}/pyproject.toml"
 
-    # 复制 Clean Architecture 源码
-    cp -r "${REPO_ROOT}/src" "${SKILL_DEST}/src"
+    # requirements.txt（如存在，供 pip install -r 参考）
+    [[ -f "${REPO_ROOT}/requirements.txt" ]] && \
+        cp "${REPO_ROOT}/requirements.txt" "${SKILL_DEST}/requirements.txt"
 
-    for subdir in tests docs; do
+    # scripts/（install.sh 用于卸载/重装）
+    if [[ -d "${REPO_ROOT}/scripts" ]]; then
+        cp -r "${REPO_ROOT}/scripts" "${SKILL_DEST}/scripts"
+    fi
+
+    # README/INSTALL（如存在）
+    for doc in README.md INSTALL.md; do
+        [[ -f "${REPO_ROOT}/${doc}" ]] && \
+            cp "${REPO_ROOT}/${doc}" "${SKILL_DEST}/${doc}"
+    done
+
+    # 复制 Clean Architecture 源码（排除 __pycache__ / .pyc）
+    rsync -a --exclude '__pycache__' --exclude '*.pyc' \
+        "${REPO_ROOT}/src/" "${SKILL_DEST}/src/"
+
+    for subdir in tests docs references; do
         if [[ -d "${REPO_ROOT}/${subdir}" ]]; then
-            cp -r "${REPO_ROOT}/${subdir}" "${SKILL_DEST}/${subdir}"
+            rsync -a --exclude '__pycache__' --exclude '*.pyc' \
+                "${REPO_ROOT}/${subdir}/" "${SKILL_DEST}/${subdir}/"
         fi
     done
 
