@@ -6,6 +6,7 @@ LLM 生成 + TTS 全流程用例
 - 解析对话脚本
 - 调用 TTS 引擎批量合成
 - FFmpeg 混音
+- 支持 fallback 机制（LLM 和 TTS）
 """
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,6 +18,7 @@ from ..adapters.audio_adapters import FFmpegAudioProcessor
 from .dialogue_speech import DialogueSpeechUseCase, parse_dialogue_segments
 from .tts_use_cases import TTSEngineInterface
 from ..adapters.llm_adapters import LLMEngineInterface
+from ..entities.errors import ErrorType
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +47,7 @@ class StudioPodcastUseCase:
     播客工作室用例
 
     全流程：LLM 生成脚本 -> 解析 -> TTS -> 混音
+    支持 fallback 机制（LLM 和 TTS）
 
     Example:
         >>> use_case = StudioPodcastUseCase(
@@ -63,6 +66,8 @@ class StudioPodcastUseCase:
     llm_engine: LLMEngineInterface
     tts_engine: TTSEngineInterface
     audio_processor: FFmpegAudioProcessor
+    fallback_llm_engine: Optional[LLMEngineInterface] = None  # 备用 LLM 引擎
+    fallback_tts_engine: Optional[TTSEngineInterface] = None  # 备用 TTS 引擎
 
     def execute(
         self,
@@ -99,17 +104,14 @@ class StudioPodcastUseCase:
 
         full_prompt = f"{_PODCAST_SYSTEM_PROMPT}\n\n{user_prompt}"
 
-        # 3. 调用 LLM 生成脚本
+        # 3. 调用 LLM 生成脚本（支持 fallback）
         logger.info(f"正在生成播客脚本: {topic}")
-        script_text = self.llm_engine.generate(
-            prompt=full_prompt,
-            temperature=0.7,
-            max_tokens=2000,
-        )
+        script_result = self._generate_script(full_prompt)
 
-        if not script_text:
-            return EngineResult.failure("LLM 生成脚本失败")
+        if not script_result:
+            return EngineResult.failure("LLM 生成脚本失败（已尝试 fallback）")
 
+        script_text = script_result
         logger.info(f"LLM 生成脚本成功，长度: {len(script_text)} 字符")
 
         # 4. 验证脚本格式（早期失败快速返回）
@@ -119,10 +121,11 @@ class StudioPodcastUseCase:
 
         logger.info(f"解析到 {len(parsed)} 个对话片段")
 
-        # 5. 委托 DialogueSpeechUseCase 执行 TTS
+        # 5. 委托 DialogueSpeechUseCase 执行 TTS（支持 fallback）
         dialogue_uc = DialogueSpeechUseCase(
             engine=self.tts_engine,
             audio_processor=self.audio_processor,
+            fallback_engine=self.fallback_tts_engine,
         )
 
         return dialogue_uc.execute(
@@ -132,3 +135,51 @@ class StudioPodcastUseCase:
             bgm_file=bgm_file,
             sample_rate=sample_rate,
         )
+
+    def _generate_script(self, prompt: str) -> Optional[str]:
+        """生成脚本，支持 fallback"""
+        # 主 LLM 生成
+        try:
+            script_text = self.llm_engine.generate(
+                prompt=prompt,
+                temperature=0.7,
+                max_tokens=2000,
+            )
+            if script_text:
+                return script_text
+        except Exception as e:
+            logger.warning(f"主 LLM 生成失败: {e}")
+
+        # 失败时尝试 fallback
+        if self.fallback_llm_engine and self._should_fallback_llm():
+            return self._try_fallback_llm(prompt)
+
+        return None
+
+    def _should_fallback_llm(self) -> bool:
+        """判断是否应该切换到备用 LLM"""
+        return True  # LLM 失败时总是尝试 fallback
+
+    def _try_fallback_llm(self, prompt: str) -> Optional[str]:
+        """尝试使用 fallback LLM"""
+        if not self.fallback_llm_engine:
+            return None
+
+        logger.warning(
+            f"主 LLM 失败，切换到 fallback LLM: "
+            f"{self.fallback_llm_engine.__class__.__name__}"
+        )
+
+        try:
+            if not self.fallback_llm_engine.is_available():
+                logger.warning("Fallback LLM 引擎不可用")
+                return None
+
+            return self.fallback_llm_engine.generate(
+                prompt=prompt,
+                temperature=0.7,
+                max_tokens=2000,
+            )
+        except Exception as e:
+            logger.error(f"Fallback LLM 调用异常: {e}")
+            return None

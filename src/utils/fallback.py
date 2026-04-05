@@ -116,7 +116,7 @@ class FallbackExecutor:
 
 def get_fallback_engine(engine_name: str) -> Optional[str]:
     """
-    获取引擎的 fallback 对应引擎
+    获取 TTS 引擎的 fallback 对应引擎
 
     Args:
         engine_name: 引擎名称
@@ -129,5 +129,24 @@ def get_fallback_engine(engine_name: str) -> Optional[str]:
         "qwen_tts": "minimax",
         "qwen_omni": "minimax",
         "qwen": "minimax",
+    }
+    return fallback_map.get(engine_name)
+
+
+def get_fallback_llm_engine(engine_name: str) -> Optional[str]:
+    """
+    获取 LLM 引擎的 fallback 对应引擎
+
+    Args:
+        engine_name: 引擎名称
+
+    Returns:
+        Optional[str]: Fallback LLM 引擎名称，如果没有则返回 None
+    """
+    fallback_map = {
+        "minimax": "qwen",
+        "MiniMaxLLMEngine": "QwenLLMEngine",
+        "qwen": "minimax",
+        "QwenLLMEngine": "MiniMaxLLMEngine",
     }
     return fallback_map.get(engine_name)
