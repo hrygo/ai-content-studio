@@ -346,7 +346,9 @@ install_skill() {
 
     # 检测路径自引用：REPO_ROOT == SKILL_DEST 表示从 skill 目录内直接运行
     # 此时 SKILL_DEST 就是源码本身，backup_to_tmp 会删除源码，导致后续复制失败
-    if [[ "$REPO_ROOT" == "$SKILL_DEST" ]]; then
+    # 注意：pwd 返回的路径可能带尾部斜杠，需要统一去除后比较
+    REPO_ROOT_NORM="${REPO_ROOT%/}"
+    if [[ "$REPO_ROOT_NORM" == "$SKILL_DEST" ]]; then
         echo "  ℹ 检测到从 skill 源目录内运行（REPO_ROOT == SKILL_DEST）"
         echo "  ℹ 跳过备份/删除/复制步骤，直接创建符号链接..."
         echo ""
