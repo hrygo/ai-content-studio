@@ -25,86 +25,188 @@
 
 ## 2. 首次安装
 
-### 2.1 从 GitHub 获取源代码
+> **核心概念**：
+> - **源码目录**：存放 Git 仓库或 Release 包的位置（可以是任意目录）
+> - **安装目标目录**：`~/.agents/skills/ai-content-studio`（固定路径，由安装脚本管理）
 
-#### 方式 1: Git Clone（推荐）
+### 2.1 获取源代码
+
+#### 方式 1A: Git Clone 到开发目录（推荐）
+
+**适用场景**：开发者模式，需要 Git 版本管理
 
 ```bash
-# Clone 仓库到主路径
+# ═══════════════════════════════════════════════
+# 步骤 1：Clone 到任意目录（例如 ~/projects）
+# ═══════════════════════════════════════════════
+mkdir -p ~/projects
+cd ~/projects
+
+git clone https://github.com/hrygo/ai-content-studio.git
+cd ai-content-studio
+
+# ✅ 此时：
+# - 源码目录：~/projects/ai-content-studio（Git 仓库）
+# - 安装目标：~/.agents/skills/ai-content-studio（尚未创建）
+```
+
+#### 方式 1B: Git Clone 直接到目标目录（生产模式）
+
+**适用场景**：生产环境，目标目录本身就是 Git 仓库
+
+```bash
+# ═══════════════════════════════════════════════
+# 直接 Clone 到目标目录
+# ═══════════════════════════════════════════════
 git clone https://github.com/hrygo/ai-content-studio.git \
     "${HOME}/.agents/skills/ai-content-studio"
 
-# 进入源码目录
 cd "${HOME}/.agents/skills/ai-content-studio"
+
+# ✅ 此时：
+# - 源码目录 = 安装目标目录：~/.agents/skills/ai-content-studio
+# - 更新方式：直接在此目录 git pull
 ```
 
-#### 方式 2: 下载 Release 包
+#### 方式 2: 下载 Release 包（无 Git 环境）
+
+**适用场景**：没有 Git 环境，或需要特定版本
 
 ```bash
-# 下载最新 release
+# ═══════════════════════════════════════════════
+# 步骤 1：下载最新 Release
+# ═══════════════════════════════════════════════
+cd /tmp  # 下载到临时目录
+
+# 方式 2.1：自动获取最新版本号
+LATEST_VERSION=$(curl -s https://api.github.com/repos/hrygo/ai-content-studio/releases/latest | \
+                 grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+echo "最新版本：v${LATEST_VERSION}"
+
+curl -L "https://github.com/hrygo/ai-content-studio/archive/refs/tags/v${LATEST_VERSION}.tar.gz" \
+    -o ai-content-studio.tar.gz
+
+# 方式 2.2：手动指定版本
 curl -L https://github.com/hrygo/ai-content-studio/archive/refs/tags/v1.2.0.tar.gz \
     -o ai-content-studio.tar.gz
 
-# 解压到主路径
-mkdir -p "${HOME}/.agents/skills"
-tar -xzf ai-content-studio.tar.gz -C "${HOME}/.agents/skills/"
-mv "${HOME}/.agents/skills/ai-content-studio-1.2.0" \
-   "${HOME}/.agents/skills/ai-content-studio"
+# ═══════════════════════════════════════════════
+# 步骤 2：解压（可选择解压到任意目录）
+# ═══════════════════════════════════════════════
+# 选项 A：解压到临时目录（推荐，让安装脚本管理目标目录）
+tar -xzf ai-content-studio.tar.gz
+cd ai-content-studio-1.2.0
 
-# 进入源码目录
-cd "${HOME}/.agents/skills/ai-content-studio"
+# ✅ 此时：
+# - 源码目录：/tmp/ai-content-studio-1.2.0
+# - 安装目标：~/.agents/skills/ai-content-studio（由 install.sh 创建）
 ```
 
 ### 2.2 执行安装脚本
 
+**无论使用哪种方式获取源码，都需要运行安装脚本：**
+
 ```bash
-# 一键安装到所有 Agent
+# ═══════════════════════════════════════════════
+# 在源码目录执行安装脚本
+# ═══════════════════════════════════════════════
 bash scripts/install.sh
 ```
 
-安装脚本会自动：
-1. ✅ 创建符号链接（Claude Code / OpenCode / OpenClaw）
-2. ✅ 安装 Python 依赖（requests/tenacity/rich/cachetools）
-3. ✅ 验证系统依赖（ffmpeg）
-4. ✅ 备份旧版本（自动迁移到 `/tmp`）
+**安装脚本会自动完成以下任务：**
+
+1. ✅ **备份旧版本**：如果存在旧安装，自动备份到 `/tmp/ai-content-studio-backups/`
+2. ✅ **复制文件到目标目录**：将源码复制到 `~/.agents/skills/ai-content-studio`
+3. ✅ **创建符号链接**：
+   - `~/.claude/skills/ai-content-studio` → `~/.agents/skills/ai-content-studio`
+   - `~/.config/opencode/skills/ai-content-studio` → `~/.agents/skills/ai-content-studio`
+   - `~/.openclaw/skills/ai-content-studio` → `~/.agents/skills/ai-content-studio`
+4. ✅ **安装 Python 依赖**：`requests`, `tenacity`, `rich`, `cachetools`
+5. ✅ **验证系统依赖**：检查 `ffmpeg` 是否可用
+6. ✅ **注册 CLI 命令**：`ai-studio` 命令全局可用
 
 ### 2.3 验证安装
 
 ```bash
+# ═══════════════════════════════════════════════
 # 检查 CLI 工具
+# ═══════════════════════════════════════════════
 ai-studio --version
 # 预期输出：ai-studio, version 1.2.0
 
+# ═══════════════════════════════════════════════
+# 检查符号链接
+# ═══════════════════════════════════════════════
+ls -la ~/.claude/skills/ai-content-studio
+ls -la ~/.config/opencode/skills/ai-content-studio
+ls -la ~/.openclaw/skills/ai-content-studio
+# 所有链接应指向：~/.agents/skills/ai-content-studio
+
+# ═══════════════════════════════════════════════
 # 测试 TTS 功能
-ai-studio synthesize --source "测试文本" -o test.mp3
+# ═══════════════════════════════════════════════
+ai-studio synthesize --source "测试文本转语音" -o test.mp3
+ls -lh test.mp3  # 应生成音频文件
 ```
 
 ---
 
-## 3. 快速安装（本地源码）
+## 3. 快速安装（已有本地源码）
 
-### 2.1 一键安装所有 Agent
+> **前提**：你已经有源码目录（通过第 2 章的任意方式获取）
+
+### 3.1 一键安装所有 Agent
 
 ```bash
-# 定位 skill 源目录（当前目录即为源码仓库）
-SKILL_SOURCE="$(pwd)"  # 或显式指定：/path/to/ai-content-studio
+# ═══════════════════════════════════════════════
+# 步骤 1：进入源码目录
+# ═══════════════════════════════════════════════
+cd /path/to/ai-content-studio  # 你的源码目录
 
-# 安装到所有支持的 Agent
-cd "$SKILL_SOURCE"
+# 确认当前在源码目录
+ls SKILL.md pyproject.toml scripts/install.sh
+# 应该能看到这些文件
+
+# ═══════════════════════════════════════════════
+# 步骤 2：执行安装脚本
+# ═══════════════════════════════════════════════
 bash scripts/install.sh
+
+# ✅ 脚本会自动：
+# - 复制文件到 ~/.agents/skills/ai-content-studio
+# - 创建所有 Agent 的符号链接
+# - 安装 Python 依赖
 ```
 
-### 2.2 选择性安装
+### 3.2 选择性安装特定 Agent
 
 ```bash
-# 仅 Claude Code
+# 仅安装 Claude Code
 bash scripts/install.sh --agent claude-code
 
-# 仅 OpenCode
+# 仅安装 OpenCode
 bash scripts/install.sh --agent opencode
 
-# 仅 OpenClaw
+# 仅安装 OpenClaw
 bash scripts/install.sh --agent openclaw
+
+# 查看帮助
+bash scripts/install.sh --help
+```
+
+### 3.3 安装后验证
+
+```bash
+# 检查版本
+ai-studio --version
+
+# 检查符号链接
+ls -la ~/.claude/skills/ai-content-studio
+ls -la ~/.config/opencode/skills/ai-content-studio
+ls -la ~/.openclaw/skills/ai-content-studio
+
+# 测试功能
+ai-studio --help
 ```
 
 ---
@@ -265,13 +367,21 @@ ln -sf "${HOME}/.agents/skills/ai-content-studio" "${HOME}/.openclaw/skills/ai-c
 
 ## 7. 更新现有安装
 
-### 7.1 Git Pull 方式（推荐）
+> **核心概念**：
+> - **源码目录**：你 clone/下载源码的位置（例如 `~/projects/ai-content-studio`）
+> - **安装目标目录**：`~/.agents/skills/ai-content-studio`（固定路径，由安装脚本管理）
 
-如果使用 Git Clone 方式安装，可以直接拉取最新代码：
+更新方式取决于你的**源码管理方式**：
+
+### 7.1 方案 A：在源码目录更新 → 重新安装（推荐）
+
+**适用场景**：源码在独立目录，通过 `bash scripts/install.sh` 安装到目标目录
 
 ```bash
-# 进入主安装目录
-cd "${HOME}/.agents/skills/ai-content-studio"
+# ═══════════════════════════════════════════════
+# 步骤 1：在源码目录拉取最新代码
+# ═══════════════════════════════════════════════
+cd /path/to/ai-content-studio  # 进入源码目录（Git 仓库）
 
 # 查看当前版本
 git describe --tags  # 输出示例：v1.2.0
@@ -282,59 +392,147 @@ git pull origin main
 # 查看更新内容
 git log --oneline --decorate -5
 
-# 重新安装（更新符号链接和依赖）
+# ═══════════════════════════════════════════════
+# 步骤 2：重新运行安装脚本（更新目标目录）
+# ═══════════════════════════════════════════════
 bash scripts/install.sh
+
+# ✅ 安装脚本会自动：
+# - 备份 ~/.agents/skills/ai-content-studio 到 /tmp
+# - 复制最新文件到 ~/.agents/skills/ai-content-studio
+# - 更新所有符号链接（Claude Code / OpenCode / OpenClaw）
+# - 安装/更新 Python 依赖
 ```
 
-### 7.2 切换到特定版本
+### 7.2 方案 B：直接在目标目录使用 Git（高级）
+
+**适用场景**：目标目录本身就是 Git 仓库（手动 clone 到 `~/.agents/skills/`）
+
+> ⚠️ **注意**：这种方式需要手动管理符号链接，除非你运行 `install.sh`
 
 ```bash
-# 查看所有版本
-git tag --sort=-version:refname
-
-# 切换到指定版本
-git checkout v1.2.0
-
-# 重新安装
-bash scripts/install.sh
-```
-
-### 7.3 重新下载 Release 包
-
-如果使用 Release 包安装：
-
-```bash
-# 备份当前安装
-mv "${HOME}/.agents/skills/ai-content-studio" \
-   "${HOME}/.agents/skills/ai-content-studio.backup_$(date +%Y%m%d_%H%M%S)"
-
-# 下载新版本
-curl -L https://github.com/hrygo/ai-content-studio/archive/refs/tags/v1.2.0.tar.gz \
-    -o ai-content-studio.tar.gz
-
-# 解压
-tar -xzf ai-content-studio.tar.gz -C "${HOME}/.agents/skills/"
-mv "${HOME}/.agents/skills/ai-content-studio-1.2.0" \
-   "${HOME}/.agents/skills/ai-content-studio"
-
-# 重新安装
+# 进入目标目录（假设是 Git 仓库）
 cd "${HOME}/.agents/skills/ai-content-studio"
+
+# 确认是 Git 仓库
+if [[ ! -d .git ]]; then
+  echo "✗ 不是 Git 仓库，请使用方案 A"
+  echo "  源码目录：/path/to/ai-content-studio"
+  echo "  目标目录：~/.agents/skills/ai-content-studio（由 install.sh 管理）"
+  exit 1
+fi
+
+# 拉取最新代码
+git pull origin main
+
+# 运行安装脚本（更新符号链接和依赖）
 bash scripts/install.sh
 ```
 
-### 7.4 验证更新
+### 7.3 方案 C：下载最新 Release 包（无 Git）
+
+**适用场景**：没有 Git 环境，或使用 Release 包安装
 
 ```bash
-# 检查版本号
+# ═══════════════════════════════════════════════
+# 步骤 1：查看当前版本
+# ═══════════════════════════════════════════════
 ai-studio --version
 
+# ═══════════════════════════════════════════════
+# 步骤 2：下载最新版本
+# ═══════════════════════════════════════════════
+# 方式 1：自动获取最新版本号
+LATEST_VERSION=$(curl -s https://api.github.com/repos/hrygo/ai-content-studio/releases/latest | \
+                 grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+echo "最新版本：v${LATEST_VERSION}"
+
+# 方式 2：手动指定版本
+LATEST_VERSION="1.2.0"
+
+# 下载
+curl -L "https://github.com/hrygo/ai-content-studio/archive/refs/tags/v${LATEST_VERSION}.tar.gz" \
+    -o /tmp/ai-content-studio.tar.gz
+
+# ═══════════════════════════════════════════════
+# 步骤 3：解压到临时目录
+# ═══════════════════════════════════════════════
+mkdir -p /tmp/ai-content-studio-update
+tar -xzf /tmp/ai-content-studio.tar.gz -C /tmp/ai-content-studio-update/
+
+# ═══════════════════════════════════════════════
+# 步骤 4：从临时目录运行安装脚本
+# ═══════════════════════════════════════════════
+cd "/tmp/ai-content-studio-update/ai-content-studio-${LATEST_VERSION}"
+bash scripts/install.sh
+
+# ✅ 安装脚本会自动：
+# - 备份旧版本到 /tmp
+# - 更新 ~/.agents/skills/ai-content-studio
+# - 更新符号链接
+
+# ═══════════════════════════════════════════════
+# 步骤 5：清理临时文件
+# ═══════════════════════════════════════════════
+rm -rf /tmp/ai-content-studio.tar.gz
+rm -rf /tmp/ai-content-studio-update
+```
+
+### 7.4 切换到特定版本
+
+**方案 A/B（Git 仓库）**：
+```bash
+# 在源码目录或目标目录（如果是 Git 仓库）
+cd /path/to/ai-content-studio  # 或 cd ~/.agents/skills/ai-content-studio
+
+# 查看所有版本
+git tag --sort=-version:refname | head -10
+# 输出示例：
+# v1.2.0
+# v1.1.1
+# v1.1.0
+# v1.0.2
+
+# 切换到指定版本
+git checkout v1.1.1
+
+# 重新安装
+bash scripts/install.sh
+```
+
+**方案 C（Release 包）**：
+```bash
+# 下载指定版本（参考 7.3 节）
+curl -L https://github.com/hrygo/ai-content-studio/archive/refs/tags/v1.1.1.tar.gz \
+    -o /tmp/ai-content-studio.tar.gz
+
+# 后续步骤同 7.3
+```
+
+### 7.5 验证更新
+
+无论使用哪种方案，更新后都应该验证：
+
+```bash
+# ═══════════════════════════════════════════════
+# 检查版本号
+# ═══════════════════════════════════════════════
+ai-studio --version
+# 预期输出：ai-studio, version 1.2.0
+
+# ═══════════════════════════════════════════════
 # 检查符号链接
+# ═══════════════════════════════════════════════
 ls -la ~/.claude/skills/ai-content-studio
 ls -la ~/.config/opencode/skills/ai-content-studio
 ls -la ~/.openclaw/skills/ai-content-studio
+# 所有符号链接应指向：~/.agents/skills/ai-content-studio
 
+# ═══════════════════════════════════════════════
 # 测试功能
+# ═══════════════════════════════════════════════
 ai-studio --help
+ai-studio synthesize --source "测试更新后的功能" -o /tmp/test.mp3
 ```
 
 ---
