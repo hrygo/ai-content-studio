@@ -43,6 +43,42 @@ def _resolve_bgm(bgm_path: str | None) -> Path | None:
     return p if p.exists() else None
 
 
+def _get_fallback_engine(engine: str) -> str | None:
+    """获取引擎的 fallback 对应引擎"""
+    if engine == "minimax":
+        return "qwen_tts"
+    elif engine in ("qwen_tts", "qwen_omni", "qwen"):
+        return "minimax"
+    return None
+
+
+def _should_fallback(error_message: str | None, engine: str) -> bool:
+    """判断是否应该切换到备用引擎
+
+    以下情况应 fallback：
+    - 余额不足（1008）
+    - Voice 未授权/不合法（400 + voice）
+    - 其他非 retry 类型的 API 错误
+    """
+    if not error_message:
+        return False
+    msg = error_message.lower()
+
+    # 余额不足 — MiniMax 特有，重试无效
+    if "1008" in msg or "insufficient" in msg or "余额" in msg:
+        return True
+
+    # Voice 相关错误 — 换一个引擎可能就解决了
+    if ("voice" in msg or "licensed" in msg or "not licensed" in msg) and ("400" in msg or "bad request" in msg or "invalid" in msg):
+        return True
+
+    # 其他明确的 API 错误（非网络问题）
+    if "api" in msg and ("error" in msg or "失败" in msg or "错误" in msg):
+        return True
+
+    return False
+
+
 def cmd_synthesize(args, container: Container) -> int:
     """synthesize 子命令"""
     text = _resolve_source(args.source)
@@ -50,15 +86,42 @@ def cmd_synthesize(args, container: Container) -> int:
         logger.error("文本内容为空")
         return 1
 
-    uc = container.synthesize_speech_use_case(args.engine)
+    primary_engine = args.engine
+    output_path = Path(args.output)
+
+    # 尝试主引擎
+    uc = container.synthesize_speech_use_case(primary_engine)
     result = uc.execute(
         text=text,
-        output_file=Path(args.output),
+        output_file=output_path,
         voice_id=args.voice,
         speed=args.speed,
         emotion=args.emotion,
         audio_format=args.format,
     )
+
+    # 失败且可 fallback → 尝试备用引擎
+    if not result.success and _should_fallback(result.error_message, primary_engine):
+        fallback_engine = _get_fallback_engine(primary_engine)
+        if fallback_engine:
+            logger.warning(
+                f"主引擎 {primary_engine} 失败（{result.error_message}），"
+                f"切换到备用引擎 {fallback_engine}..."
+            )
+            try:
+                uc = container.synthesize_speech_use_case(fallback_engine)
+                result = uc.execute(
+                    text=text,
+                    output_file=output_path,
+                    voice_id=args.voice,
+                    speed=args.speed,
+                    emotion=args.emotion,
+                    audio_format=args.format,
+                )
+            except Exception as e:
+                logger.error(f"备用引擎 {fallback_engine} 调用异常: {e}")
+                return 1
+
     return 0 if result.success else 1
 
 
