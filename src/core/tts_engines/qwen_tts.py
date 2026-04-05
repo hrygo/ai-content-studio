@@ -10,7 +10,6 @@ import requests
 from typing import Optional, List, Dict, Any, Union
 
 from .base import BaseTTSEngine
-from ...services.sse_parser import parse_sse_stream
 from ...core.enums import QwenVoiceID, LanguageCode
 
 logger = logging.getLogger(__name__)
@@ -20,7 +19,7 @@ class QwenTTSEngine(BaseTTSEngine):
     """Qwen TTS 引擎（专用 TTS API）"""
 
     DEFAULT_MODEL = "qwen3-tts-flash"
-    DEFAULT_VOICE = QwenVoiceID.AURORA
+    DEFAULT_VOICE = QwenVoiceID.CHERRY
     SAMPLE_RATE = 16000
 
     # 支持的语言（从 LanguageCode 枚举推导）
@@ -150,8 +149,7 @@ class QwenTTSEngine(BaseTTSEngine):
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-            "X-DashScope-SSE": "enable"
+            "Content-Type": "application/json"
         }
 
         payload = {
@@ -164,7 +162,9 @@ class QwenTTSEngine(BaseTTSEngine):
         }
 
         try:
-            # Qwen TTS 使用独立的 API 端点
+            # Qwen TTS 使用非流式 API（非 SSE）
+            # 流式 SSE 模式返回裸 PCM（无 WAV header），需额外处理才能保存为 WAV
+            # 非流式直接返回 audio_url，下载即可得到完整 WAV 文件
             url = f"{self.api_endpoint}/api/v1/services/aigc/multimodal-generation/generation"
 
             resp = requests.post(
@@ -172,7 +172,7 @@ class QwenTTSEngine(BaseTTSEngine):
                 headers=headers,
                 json=payload,
                 timeout=60,
-                stream=True
+                stream=False
             )
 
             # 检查状态码
@@ -180,22 +180,18 @@ class QwenTTSEngine(BaseTTSEngine):
                 logger.error(f"API 请求失败 ({resp.status_code}): {resp.text[:200]}")
                 resp.raise_for_status()
 
-            # 使用统一的 SSE 解析器提取音频数据
-            audio_chunks = []
-            for chunk in parse_sse_stream(resp):
-                audio_obj = chunk.get("output", {}).get("audio", {})
-                audio_data = audio_obj.get("data")
-                if audio_data:
-                    audio_chunks.append(audio_data)
+            # 解析响应获取音频 URL
+            result = resp.json()
+            audio_url = result.get("output", {}).get("audio", {}).get("url")
 
-            if not audio_chunks:
-                logger.error("响应中未包含音频数据")
+            if not audio_url:
+                logger.error(f"响应中未包含音频 URL: {result}")
                 return None
 
-            # 分块解码后拼接字节（避免字符串拼接的 O(n²) 复杂度）
-            audio_bytes = b"".join(
-                base64.b64decode(chunk) for chunk in audio_chunks
-            )
+            # 下载音频文件
+            audio_resp = requests.get(audio_url, timeout=60)
+            audio_resp.raise_for_status()
+            audio_bytes = audio_resp.content
 
             logger.info(f"合成成功 ({len(audio_bytes):,} bytes, {len(text)} chars)")
             return audio_bytes

@@ -344,6 +344,36 @@ install_skill() {
     echo "  目标 Agent：${TARGET_AGENT}"
     echo ""
 
+    # 检测路径自引用：REPO_ROOT == SKILL_DEST 表示从 skill 目录内直接运行
+    # 此时 SKILL_DEST 就是源码本身，backup_to_tmp 会删除源码，导致后续复制失败
+    if [[ "$REPO_ROOT" == "$SKILL_DEST" ]]; then
+        echo "  ℹ 检测到从 skill 源目录内运行（REPO_ROOT == SKILL_DEST）"
+        echo "  ℹ 跳过备份/删除/复制步骤，直接创建符号链接..."
+        echo ""
+
+        # 只创建符号链接（其他 agent 的 link）
+        case "$TARGET_AGENT" in
+            all)
+                create_link "$LINK_CLAUDE" "$SKILL_DEST" "Claude Code"
+                create_link "$LINK_OPENCODE" "$SKILL_DEST" "OpenCode"
+                create_link "$LINK_OPENCLAW" "$SKILL_DEST" "OpenClaw"
+                ;;
+            claude-code)
+                create_link "$LINK_CLAUDE" "$SKILL_DEST" "Claude Code"
+                ;;
+            opencode)
+                create_link "$LINK_OPENCODE" "$SKILL_DEST" "OpenCode"
+                ;;
+            openclaw)
+                create_link "$LINK_OPENCLAW" "$SKILL_DEST" "OpenClaw"
+                ;;
+        esac
+
+        echo ""
+        echo "✓ 安装完成！"
+        return
+    fi
+
     # 备份主安装（如果存在）
     if [[ -d "$SKILL_DEST" ]]; then
         echo "  ! 已存在主安装，备份到 /tmp..."
