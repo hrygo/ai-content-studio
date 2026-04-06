@@ -53,7 +53,7 @@ cd ai-content-studio
 
 ```bash
 # 获取最新版本并解压（以 v1.2.0 为例）
-curl -L https://github.com/hrygo/ai-content-studio/archive/refs/tags/v1.2.0.tar.gz -o studio.tar.gz
+curl -L https://github.com/hrygo/ai-content-studio/archive/refs/tags/v1.2.1.tar.gz -o studio.tar.gz
 tar -xzf studio.tar.gz
 cd ai-content-studio-1.2.0
 ```
@@ -139,7 +139,7 @@ Skill 也会尝试从 `~/.config/opencode/opencode.json` 读取配置：
 ### 7.1 CLI 版本检查
 ```bash
 ai-studio --version
-# 预期输出: ai-studio, version 1.2.0
+# 预期输出: ai-studio, version 1.2.1
 ```
 
 ### 7.2 路径完整性检查

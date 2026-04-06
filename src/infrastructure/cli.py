@@ -190,7 +190,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="AI Content Studio - 专业级 AI 音频内容创作工具",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--version", action="version", version="ai-studio 1.2.0")
+    parser.add_argument("--version", action="version", version="ai-studio 1.2.1")
     subparsers = parser.add_subparsers(dest="command", required=False) # Changed required to False to allow --version
 
     # ── synthesize ────────────────────────────────────────

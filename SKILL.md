@@ -16,7 +16,7 @@ compatibility:
   env:
     - MINIMAX_API_KEY + MINIMAX_GROUP_ID
     - QWEN_API_KEY (或 DASHSCOPE_API_KEY)
-version: 1.2.0
+version: 1.2.1
 last_updated: 2026-04-06
 ---
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai-content-studio"
-version = "1.2.0"
+version = "1.2.1"
 description = "专业级 AI 音频内容创作工具 - 三引擎编排播客制作系统"
 readme = "README.md"
 license = {text = "MIT"}

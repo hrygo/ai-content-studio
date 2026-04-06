@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.0] - 2026-04-06
+## [1.2.1] - 2026-04-06
 
 ### ✨ New Features
 - **CLI --version**: 新增 `--version` 参数支持，方便版本验证。 
