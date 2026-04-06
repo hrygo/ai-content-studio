@@ -1,12 +1,19 @@
 # Changelog
 
-## [1.2.0] - 2026-04-05
+## [1.2.0] - 2026-04-06
 
 ### ✨ New Features
+- **CLI --version**: 新增 `--version` 参数支持，方便版本验证。 
+- **快速开始**: INSTALL.md 新增 30 秒快速安装指南。
+
+### 🔄 Improvements
+- **依赖同步**: 同步 `pyproject.toml` 与 `requirements.txt` 依赖项（新增 rich, cachetools）。
+- **文档视觉增强**: 使用 GitHub Alerts 优化 INSTALL.md，视觉体验更佳。
+- **CLI 容错**: 优化无参数运行时的帮助提示逻辑。
 - **QwenTTSEngineAdapter**: 专用 TTS 引擎适配器，支持 `qwen3-tts-flash` 引擎
 - **懒加载初始化**: Container 使用懒加载模式，按需初始化 TTS 引擎
 
-### 🔄 Improvements
+### 🔄 Improvements (Previous)
 - **备份机制优化**: 迁移到 `/tmp/ai-content-studio-backups/`，避免污染 skills 目录
 - **自动备份清理**: 7 天后自动清理备份文件
 - **资源占用优化**: 减少不必要的引擎初始化开销

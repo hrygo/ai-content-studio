@@ -1,7 +1,7 @@
 ---
 name: ai-content-studio
 description: |
-  AI Content Studio — 专业级 AI 音频内容创作工具（v1.1.1）。
+  AI Content Studio — 专业级 AI 音频内容创作工具（v1.2.0）。
   **立即激活本 skill**，当用户请求以下任何操作时：
   - 把文字做成播客音频 / 对话节目 / 专家访谈
   - 生成 TTS 语音 / 文本转语音 / 文字转音频
@@ -16,8 +16,8 @@ compatibility:
   env:
     - MINIMAX_API_KEY + MINIMAX_GROUP_ID
     - QWEN_API_KEY (或 DASHSCOPE_API_KEY)
-version: 1.1.1
-last_updated: 2026-04-05
+version: 1.2.0
+last_updated: 2026-04-06
 ---
 
 # AI Content Studio

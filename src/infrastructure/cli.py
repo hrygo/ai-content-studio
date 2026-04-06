@@ -190,7 +190,8 @@ def build_parser() -> argparse.ArgumentParser:
         description="AI Content Studio - 专业级 AI 音频内容创作工具",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    parser.add_argument("--version", action="version", version="ai-studio 1.2.0")
+    subparsers = parser.add_subparsers(dest="command", required=False) # Changed required to False to allow --version
 
     # ── synthesize ────────────────────────────────────────
     p = subparsers.add_parser("synthesize", help="单文本 TTS 合成")
@@ -254,6 +255,10 @@ def main():
     except Exception as e:
         logger.error(f"容器初始化失败: {e}")
         sys.exit(1)
+
+    if not args.command:
+        parser.print_help()
+        sys.exit(0)
 
     try:
         exit_code = args.func(args, container)
