@@ -540,18 +540,22 @@ bash scripts/install.sh  # 自动备份旧版本
 ├── INSTALL.md               # 本安装指南（可选）
 ├── CHANGELOG.md             # 版本变更记录（可选）
 ├── scripts/
-│   ├── install.sh           # 多 Agent 安装脚本
-│   └── test_voices.py       # 音色测试工具
-├── src/                     # Clean Architecture 源码
-│   ├── adapters/            # TTS 引擎适配器
-│   ├── core/                # 核心引擎（TTS + LLM）
-│   ├── entities/            # 数据实体
-│   ├── infrastructure/      # CLI 和依赖注入
-│   ├── services/            # API 客户端
-│   └── use_cases/           # 业务用例
-├── tests/                   # 测试套件
-│   ├── test_adapters/
+│   └── install.sh           # 多 Agent 安装脚本
+├── src/
+│   └── voiceforge/          # Clean Architecture 源码（src-layout）
+│       ├── audio/           # 音频处理（FFmpeg mixer + 工具函数）
+│       ├── clients/         # API 客户端（MiniMax / Qwen，共享 SSE 解析）
+│       ├── engines/         # 引擎层
+│       │   ├── tts/         # TTS 引擎（MiniMax / Qwen TTS / Qwen Omni）
+│       │   └── llm/         # LLM 引擎（MiniMax / Qwen）
+│       ├── entities/        # 数据实体（AudioSegment, EngineResult, TTSRequest 等）
+│       ├── fallback/        # Fallback 执行器（引擎映射 + 防循环）
+│       ├── infrastructure/  # CLI + DI Container
+│       ├── protocols/       # Protocol 接口（TTSEngine, LLMEngine, AudioProcessor）
+│       └── use_cases/       # 业务用例（Synthesize, Batch, Dialogue, Podcast）
+├── tests/                   # 测试套件（47 tests）
 │   ├── test_entities/
+│   ├── test_fallback/
 │   ├── test_infrastructure/
 │   └── test_use_cases/
 ├── docs/                    # 文档（可选）
