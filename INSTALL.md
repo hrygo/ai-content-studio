@@ -1,190 +1,566 @@
-# AI Content Studio Skill 安装指南 🚀
+# VoiceForge Skill 安装指南
 
-> **面向对象**：Claude Code、OpenCode、OpenClaw 等现代 AI Agent
-> **核心目标**：一次安装，多端兼容，全自动环境就绪。
+> **适用对象**：Claude Code、OpenCode、OpenClaw 等 AI Agent
+> **安装目标**：将 skill 安装到各 Agent 的 skills 目录，实现多 Agent 兼容
 
 ---
 
-## ⚡ 1. 30秒快速开始（推荐）
+## 1. 概述
 
-如果你已经克隆了源码，只需一行命令即可完成从主路径安装、跨 Agent 链接到 Python 依赖部署的全过程。
+本 skill 遵循 **Agent Skills 通用最佳实践**，一次安装，覆盖所有主流 AI Agent。
+
+### 1.1 支持的 Agent
+
+| Agent | 路径类型 | 安装方式 | 备注 |
+|-------|---------|---------|------|
+| Claude Code | 符号链接 | `~/.claude/skills/voiceforge` → 主路径 | 兼容性链接 |
+| OpenCode | 符号链接 | `~/.config/opencode/skills/voiceforge` → 主路径 | 兼容性链接 |
+| OpenClaw | 符号链接 | `~/.openclaw/skills/voiceforge` → 主路径 | 兼容性链接 + metadata |
+| Codex / Cursor / Cline | 主路径 | `~/.agents/skills/voiceforge/` | 原生支持 |
+| **通用标准** | **主路径** | `~/.agents/skills/voiceforge/` | 所有 Agent 可读 |
+
+**架构**：所有 Agent 的路径都通过符号链接指向主路径 `~/.agents/skills/voiceforge/`。
+
+---
+
+## 2. 快速安装
+
+### 2.1 一键安装所有 Agent
 
 ```bash
-# 进入项目根目录并运行
+# 定位 skill 源目录（当前目录即为源码仓库）
+SKILL_SOURCE="$(pwd)"  # 或显式指定：/path/to/voiceforge
+
+# 安装到所有支持的 Agent
+cd "$SKILL_SOURCE"
 bash scripts/install.sh
 ```
 
-> [!TIP]
-> 默认会安装到所有支持的 Agent（Claude Code, OpenCode, OpenClaw）。如果是开发者，请确保在 Git 仓库根目录运行。
-
----
-
-## 📖 2. 核心架构与路径
-
-本 Skill 遵循 **Agent Skills 通用标准架构**，所有 Agent 均通过符号链接指向单一的「真相源」主路径。
-
-### 2.1 路径矩阵
-
-| 组件 | 类型 | 物理路径/链接路径 | 备注 |
-| :--- | :--- | :--- | :--- |
-| **主安装路径** | **主目录** | `~/.agents/skills/ai-content-studio/` | 通用标准，所有文件存放在此 |
-| **Claude Code** | 符号链接 | `~/.claude/skills/ai-content-studio` | 👈 `ln -s` 主路径 |
-| **OpenCode** | 符号链接 | `~/.config/opencode/skills/ai-content-studio` | 👈 `ln -s` 主路径 |
-| **OpenClaw** | 符号链接 | `~/.openclaw/skills/ai-content-studio` | 👈 `ln -s` 主路径 |
-
-> [!IMPORTANT]
-> **为什么要用符号链接？**
-> 使你在任何 Agent 中对 Skill 的修改（如调整角色音色配置）都能实时同步到所有 Agent，且避免了多份冗余文件的同步难题。
-
----
-
-## 📥 3. 获取源代码
-
-### 方案 A：Git Clone（开发者模式 - 推荐）
-适合需要持续更新、提交代码或参与开发的用户。
+### 2.2 选择性安装
 
 ```bash
-git clone https://github.com/hrygo/ai-content-studio.git
-cd ai-content-studio
-```
-
-### 方案 B：Release 包（生产模式）
-适合只需要稳定版本、无需 Git 的用户。
-
-```bash
-# 获取最新版本并解压（以 v1.2.0 为例）
-curl -L https://github.com/hrygo/ai-content-studio/archive/refs/tags/v1.2.1.tar.gz -o studio.tar.gz
-tar -xzf studio.tar.gz
-cd ai-content-studio-1.2.0
-```
-
----
-
-## 🛠️ 4. 自动化安装详解
-
-### 4.1 完整安装流程
-安装脚本 `scripts/install.sh` 是智慧核心，它会自动完成：
-
-1.  **环境扫描**：检查 Python 3 及 `ffmpeg` 是否就绪。
-2.  **智能备份**：将旧版本打包至 `/tmp/ai-content-studio-backups/`（保留 7 天）。
-3.  **Bundle 部署**：将核心文件（`src/`, `SKILL.md` 等）复制到 `~/.agents/` 主路径。
-4.  **联动链接**：建立 Claude/OpenCode/OpenClaw 的符号链接。
-5.  **依赖闭环**：通过 `pip install -e .` 注册 `ai-studio` 全局 CLI。
-
-```bash
-# 模式 1：全自动安装（推荐）
-bash scripts/install.sh
-
-# 模式 2：仅安装特定 Agent
+# 仅 Claude Code
 bash scripts/install.sh --agent claude-code
 
-# 模式 3：卸载
+# 仅 OpenCode
+bash scripts/install.sh --agent opencode
+
+# 仅 OpenClaw
+bash scripts/install.sh --agent openclaw
+```
+
+---
+
+## 3. Agent 特定安装
+
+### 3.1 Claude Code
+
+Claude Code 通过 `~/.claude/skills/` 目录识别 skill。
+
+```bash
+# 安装
+bash scripts/install.sh --agent claude-code
+
+# 验证
+ls -la ~/.claude/skills/voiceforge
+# 预期输出：符号链接指向 ~/.agents/skills/voiceforge
+
+# 激活测试：在 voiceforge 项目目录发起任务
+# "生成一段辩论播客 TTS 音频"
+```
+
+### 3.2 OpenCode
+
+OpenCode 使用 `~/.config/opencode/skills/` 作为 skill 查找路径。
+
+```bash
+# 安装
+bash scripts/install.sh --agent opencode
+
+# 验证
+ls -la ~/.config/opencode/skills/voiceforge
+# 预期输出：符号链接指向 ~/.agents/skills/voiceforge
+
+# OpenCode 应自动识别 skill（基于 SKILL.md frontmatter）
+```
+
+### 3.3 OpenClaw
+
+OpenClaw 支持 `metadata.openclaw` 元数据格式，可声明依赖和安装器。
+
+```bash
+# 安装
+bash scripts/install.sh --agent openclaw
+
+# 验证
+ls -la ~/.openclaw/skills/voiceforge
+# 预期输出：符号链接指向 ~/.agents/skills/voiceforge
+
+# OpenClaw 应读取 metadata.openclaw.requires 并提示：
+#   - 系统依赖：ffmpeg（可通过 brew 安装）
+#   - 环境变量：DASHSCOPE_API_KEY, MINIMAX_API_KEY
+```
+
+**ClawHub 集成**（可选）：
+```bash
+# 方式 1：使用 OpenClaw 原生命令（推荐）
+openclaw skills install voiceforge
+
+# 方式 2：使用 ClawHub CLI
+npm i -g clawhub   # 先安装 CLI（如尚未安装）
+clawhub install voiceforge
+```
+
+### 3.4 其他 Agent（Codex / Cursor / Cline）
+
+这些 Agent 原生支持 `~/.agents/skills/` 标准路径：
+
+```bash
+# 直接使用主路径（无需符号链接）
+ls ~/.agents/skills/voiceforge/SKILL.md
+# 预期输出：skill 主入口存在
+```
+
+---
+
+## 4. 手动安装（无脚本环境）
+
+如果安装脚本不可用，Agent 可直接执行以下命令：
+
+### 4.1 定义路径变量
+
+```bash
+SKILL_SOURCE="$(pwd)"                    # skill 源码仓库
+SKILL_DEST="${HOME}/.agents/skills/voiceforge"  # 主路径
+```
+
+### 4.2 复制 skill bundle
+
+```bash
+# 创建主目录
+mkdir -p "$SKILL_DEST"
+
+# 复制核心文件
+cp "${SKILL_SOURCE}/SKILL.md" "${SKILL_DEST}/"
+cp "${SKILL_SOURCE}/requirements.txt" "${SKILL_DEST}/"
+cp -r "${SKILL_SOURCE}/scripts/" "${SKILL_DEST}/"
+cp -r "${SKILL_SOURCE}/references/" "${SKILL_DEST}/"
+cp -r "${SKILL_SOURCE}/tests/" "${SKILL_DEST}/"
+```
+
+### 4.3 创建符号链接
+
+```bash
+# Claude Code
+mkdir -p "${HOME}/.claude/skills/"
+ln -sf "$SKILL_DEST" "${HOME}/.claude/skills/voiceforge"
+
+# OpenCode
+mkdir -p "${HOME}/.config/opencode/skills/"
+ln -sf "$SKILL_DEST" "${HOME}/.config/opencode/skills/voiceforge"
+
+# OpenClaw
+mkdir -p "${HOME}/.openclaw/skills/"
+ln -sf "$SKILL_DEST" "${HOME}/.openclaw/skills/voiceforge"
+```
+
+### 4.4 验证安装
+
+```bash
+# 检查主安装
+ls -la "$SKILL_DEST/SKILL.md"
+
+# 检查符号链接
+readlink "${HOME}/.claude/skills/voiceforge"   # Claude Code
+readlink "${HOME}/.config/opencode/skills/voiceforge"  # OpenCode
+readlink "${HOME}/.openclaw/skills/voiceforge"  # OpenClaw
+```
+
+---
+
+## 5. Git Clone 方式（版本管理）
+
+如果 skill 已托管到 Git 仓库：
+
+```bash
+# 备份旧安装
+if [[ -d "${HOME}/.agents/skills/voiceforge" ]]; then
+    mv "${HOME}/.agents/skills/voiceforge" \
+       "${HOME}/.agents/skills/voiceforge.backup_$(date +%Y%m%d_%H%M%S)"
+fi
+
+# 删除旧符号链接
+rm -f "${HOME}/.claude/skills/voiceforge"
+rm -f "${HOME}/.config/opencode/skills/voiceforge"
+rm -f "${HOME}/.openclaw/skills/voiceforge"
+
+# Clone 新版本
+git clone <skill-repo-url> "${HOME}/.agents/skills/voiceforge"
+
+# 重新创建符号链接
+ln -sf "${HOME}/.agents/skills/voiceforge" "${HOME}/.claude/skills/voiceforge"
+ln -sf "${HOME}/.agents/skills/voiceforge" "${HOME}/.config/opencode/skills/voiceforge"
+ln -sf "${HOME}/.agents/skills/voiceforge" "${HOME}/.openclaw/skills/voiceforge"
+```
+
+---
+
+## 6. 卸载
+
+### 6.1 通用卸载
+
+```bash
+# 卸载所有 Agent 的安装
 bash scripts/install.sh --uninstall
 ```
 
-> [!CAUTION]
-> **权限提醒**
-> 请勿使用 `sudo` 运行安装脚本。脚本应在普通用户权限下管理当前的 `~/.agents` 目录。
-
----
-
-## 📦 5. 环境依赖依赖
-
-### 5.1 系统级依赖
-| 依赖 | 作用 | 安装命令 |
-| :--- | :--- | :--- |
-| **Python 3.8+** | 核心逻辑运行 | `brew install python` |
-| **FFmpeg** | 音频混音与格式转换 | `brew install ffmpeg` |
-
-### 5.2 Python 依赖 (由脚本自动完成)
-安装完成后，以下库将就绪：
-- `requests`, `tenacity` (网络通信与重试)
-- `rich`, `cachetools` (交互美化与缓存)
-- `pydub` (音频处理)
-
-> [!NOTE]
-> **关于 Python 3.14+ 环境管理**
-> 在最新的 macOS 系统中，若提示 `externally-managed-environment`，安装脚本会自动尝试添加 `--break-system-packages` 标志或引导使用虚拟环境。
-
----
-
-## 🔐 6. API 配置
-
-Skill 需要 API Key 才能调用云端 TTS 引擎。
-
-### 6.1 环境变量方式
-在 `~/.zshrc` 或 `~/.bashrc` 中添加：
+### 6.2 选择性卸载
 
 ```bash
-export DASHSCOPE_API_KEY="your-aliyun-key"  # 阿里云百炼 (Qwen)
-export MINIMAX_API_KEY="your-minimax-key"    # MiniMax 平台
-```
+# 手动删除符号链接
+rm -f "${HOME}/.claude/skills/voiceforge"       # Claude Code
+rm -f "${HOME}/.config/opencode/skills/voiceforge"  # OpenCode
+rm -f "${HOME}/.openclaw/skills/voiceforge"    # OpenClaw
 
-### 6.2 配置文件方式 (向后兼容)
-Skill 也会尝试从 `~/.config/opencode/opencode.json` 读取配置：
-
-```json
-{
-  "provider": {
-    "minimax": { "options": { "apiKey": "..." } },
-    "bailian": { "options": { "apiKey": "..." } }
-  }
-}
+# 删除主安装
+rm -rf "${HOME}/.agents/skills/voiceforge"
 ```
 
 ---
 
-## ✅ 7. 验证安装
+## 7. 故障排查
 
-### 7.1 CLI 版本检查
+### 7.1 Skill 未激活
+
+| 检查项 | 命令 |
+|--------|------|
+| 确认工作目录 | `pwd` 应在 voiceforge 项目根目录 |
+| 检查符号链接 | `ls -la ~/.claude/skills/voiceforge` |
+| 检查主安装 | `ls -la ~/.agents/skills/voiceforge/SKILL.md` |
+| 重启会话 | 退出并重新进入 Agent 会话 |
+
+### 7.2 符号链接失效
+
 ```bash
-ai-studio --version
-# 预期输出: ai-studio, version 1.2.1
+# 诊断
+readlink ~/.claude/skills/voiceforge
+# 如果输出"无此类文件或目录"，链接已断开
+
+# 修复
+bash scripts/install.sh  # 重新创建所有链接
 ```
 
-### 7.2 路径完整性检查
-```bash
-# 检查主 Skill 入口
-ls -la ~/.agents/skills/ai-content-studio/SKILL.md
+### 7.3 脚本执行失败
 
-# 检查 Agent 符号链接
-readlink ~/.claude/skills/ai-content-studio
+```bash
+# 检查执行权限
+ls -la scripts/install.sh
+# 如无执行权限：
+chmod +x scripts/install.sh
+
+# 使用调试模式运行
+bash -x scripts/install.sh
+```
+
+### 7.4 备份冲突
+
+旧版本备份占用空间，可手动清理：
+
+```bash
+rm -rf ~/.agents/skills/voiceforge.backup_*
+rm -rf ~/.agents/skills/voiceforge.legacy_*
+rm -rf ~/.claude/skills/voiceforge.backup_*
+rm -rf ~/.claude/skills/voiceforge.legacy_*
 ```
 
 ---
 
-## ❓ 8. 故障排查
+## 8. 依赖
+
+Skill 安装完成后，Agent 需要确保以下运行时依赖已就绪。
+
+### 8.1 Python 环境（Agent 自动检测）
+
+AI Agent 应在执行任务前自动检测 Python 环境，缺失时引导用户安装：
+
+```bash
+# 检测 Python 是否存在
+if ! command -v python3 &>/dev/null; then
+    echo "[voiceforge] Python 3 未安装，VoiceForge 功能将不可用。"
+    echo "安装命令："
+    echo "  macOS:     brew install python"
+    echo "  Linux:     sudo apt install python3 python3-pip"
+    echo "  Windows:   访问 https://python.org 下载安装包"
+fi
+
+# 检测 pip 是否可用
+if ! python3 -m pip --version &>/dev/null; then
+    echo "[voiceforge] pip 未安装，Python 包将无法安装。"
+    echo "  macOS:     brew install python（pip 自动包含）"
+    echo "  Linux:     sudo apt install python3-pip"
+fi
+
+# 显示版本（用于诊断）
+python3 --version 2>/dev/null || echo "[voiceforge] Python: 未安装"
+python3 -m pip --version 2>/dev/null || echo "[voiceforge] pip: 未安装"
+```
+
+**自动安装脚本**（适用于全新环境）：
+```bash
+# macOS
+if ! command -v python3 &>/dev/null; then
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    brew install python
+fi
+
+# Linux (Debian/Ubuntu)
+if ! command -v python3 &>/dev/null; then
+    sudo apt update && sudo apt install -y python3 python3-pip python3-venv
+fi
+```
+
+### 8.2 系统依赖
+
+| 依赖 | 说明 | 安装命令 |
+|------|------|---------|
+| **ffmpeg** | 音频处理引擎（必需） | `brew install ffmpeg` (macOS) / `sudo apt install ffmpeg` (Linux) |
+
+**Agent 自动检测与安装引导**：
+```bash
+# 检测 ffmpeg
+if ! command -v ffmpeg &>/dev/null; then
+    echo "ffmpeg 未安装，音频处理将不可用！"
+    echo "安装命令："
+    echo "  macOS:  brew install ffmpeg"
+    echo "  Linux:  sudo apt install ffmpeg"
+    echo "  Docker: apt-get install ffmpeg"
+    # 继续执行（仅 TTS 合成受影响，脚本仍可运行）
+fi
+
+# 显示版本（验证安装成功）
+ffmpeg -version | head -n1
+```
+
+### 8.3 Python 依赖
+
+安装 Python 包：
+
+```bash
+# 定位 requirements.txt（安装后位于主路径，源码时位于当前目录）
+SKILL_DIR="${HOME}/.agents/skills/voiceforge"
+REQUIREMENTS_FILE="${SKILL_DIR}/requirements.txt"
+[[ ! -f "$REQUIREMENTS_FILE" ]] && REQUIREMENTS_FILE="$(pwd)/requirements.txt"
+
+# 方式 1：使用 requirements.txt（推荐）
+python3 -m pip install -r "$REQUIREMENTS_FILE"
+
+# 方式 2：单独安装各依赖
+python3 -m pip install requests tenacity rich cachetools
+
+# 方式 3：使用虚拟环境（隔离环境，推荐生产环境使用）
+python3 -m venv "${SKILL_DIR}/.venv"
+source "${SKILL_DIR}/.venv/bin/activate"   # Linux/macOS
+# .venv\Scripts\activate                    # Windows
+python3 -m pip install -r "$REQUIREMENTS_FILE"
+```
+
+**Agent 批量安装参考**：
+```bash
+# 安装 Python 后自动装包
+SKILL_DIR="${HOME}/.agents/skills/voiceforge"
+for pkg in requests tenacity rich cachetools; do
+    python3 -m pip install "$pkg" 2>/dev/null || true
+done
+```
+
+**依赖说明**：
+
+| 包 | 版本 | 用途 |
+|-----|------|------|
+| `requests` | >=2.31.0 | HTTP 请求（调用 TTS API） |
+| `tenacity` | >=8.0.0 | 重试逻辑（API 调用的容错） |
+| `rich` | >=13.0.0 | 进度条和富文本输出 |
+| `cachetools` | >=5.0.0 | 结果缓存（避免重复请求） |
+
+**常见安装问题**：
 
 <details>
-<summary><b>问题 1: ai-studio 命令未找到</b></summary>
-手动运行：
-```bash
-python3 -m pip install -e ~/.agents/skills/ai-content-studio --break-system-packages
+<summary><b>问题 1: 国内镜像返回 403 错误</b></summary>
+
+某些国内 PyPI 镜像（如清华源）可能返回 HTTP 403 错误：
+
 ```
+ERROR: HTTP error 403 while getting https://pypi.tuna.tsinghua.edu.cn/...
+ERROR: Could not install requirement setuptools>=61.0
+```
+
+**解决方案**：使用官方 PyPI 镜像
+
+```bash
+python3 -m pip install -e "${SKILL_DIR}" \
+    --break-system-packages \
+    --index-url https://pypi.org/simple
+```
+
 </details>
 
 <details>
-<summary><b>问题 2: ffmpeg 报错</b></summary>
-确保命令 `ffmpeg -version` 能输出版本号。若未安装，运行 `brew install ffmpeg`。
+<summary><b>问题 2: macOS 系统包保护错误</b></summary>
+
+macOS Python 3.14+ 默认禁止系统级包安装：
+
+```
+error: externally-managed-environment
+× This environment is externally managed
+```
+
+**解决方案**：添加 `--break-system-packages` 标志
+
+```bash
+python3 -m pip install -e "${SKILL_DIR}" \
+    --break-system-packages
+```
+
+> **说明**：`--break-system-packages` 标志允许 pip 绕过系统包管理保护，适用于开发者环境。
+
 </details>
 
 <details>
-<summary><b>问题 3: API 返回 401 Unauthorized</b></summary>
-检查环境变量是否生效：`echo $DASHSCOPE_API_KEY`。注意修改配置文件后需要重启终端。
-</details>
+<summary><b>问题 3: 自动安装失败</b></summary>
 
----
+安装脚本会自动尝试两次：
+1. 使用默认镜像（pip.conf 配置）
+2. 回退到官方 PyPI（解决 403 问题）
 
-## 🔄 9. 更新与维护
+如果仍然失败，请手动执行：
 
-版本更新时，只需拉取最新代码并重复运行：
 ```bash
-git pull origin main
-bash scripts/install.sh
+SKILL_DIR="${HOME}/.agents/skills/voiceforge"
+python3 -m pip install -e "$SKILL_DIR" \
+    --break-system-packages \
+    --index-url https://pypi.org/simple
 ```
 
-> [!TIP]
-> 所有的自定义配置、角色库修改建议保存在 `~/.agents/skills/ai-content-studio/references/` 中，安装脚本在更新时会尝试合并或提醒备份。
+</details>
+
+### 8.4 语音处理库（进阶）
+
+以下库为可选，用于增强本地音频处理能力：
+
+```bash
+# 可选：音频处理增强
+python3 -m pip install pydub audioop-libs  # 音频切片和转换
+
+# 可选：波形可视化
+python3 -m pip install matplotlib numpy  # 音频波形绘图
+```
+
+> **注意**：核心 TTS 功能依赖云端 API（DashScope/MiniMax），本地库为辅助工具，非必需。
+
+### 8.5 API Key 配置
+
+从 `~/.config/opencode/opencode.json` 自动读取：
+- `provider.bailian.options.apiKey` → Qwen（DASHSCOPE_API_KEY）
+- `provider.minimax.options.apiKey` → MiniMax（MINIMAX_API_KEY）
+
+也可通过环境变量覆盖：
+```bash
+export DASHSCOPE_API_KEY="your-dashscope-key"
+export MINIMAX_API_KEY="your-minimax-key"
+```
+
+**Agent 自动配置引导**：
+```bash
+# 检查 API Key 是否已配置
+if [[ -z "$DASHSCOPE_API_KEY" ]] && [[ -z "$MINIMAX_API_KEY" ]]; then
+    echo "[voiceforge] 警告：未检测到 API Key 环境变量"
+    echo "TTS 功能需要至少一个 API Key，请设置："
+    echo "  export DASHSCOPE_API_KEY='your-key'   # Qwen / 阿里云百炼 TTS"
+    echo "  export MINIMAX_API_KEY='your-key'     # MiniMax TTS"
+fi
+```
 
 ---
-*Generated by AI Content Studio Team | Last Updated: 2026-04-06*
+
+## 9. 安装后验证
+
+### 9.1 文件结构检查
+
+```bash
+tree -L 2 ~/.agents/skills/voiceforge/
+# 应包含：SKILL.md, scripts/, references/, tests/
+```
+
+### 9.2 路径验证矩阵
+
+```bash
+echo "=== 路径验证 ==="
+echo "主路径:     $([[ -d ~/.agents/skills/voiceforge ]] && echo '✓ 存在' || echo '✗ 缺失')"
+echo "Claude:    $([[ -L ~/.claude/skills/voiceforge ]] && echo '✓ 链接' || echo '✗ 缺失')"
+echo "OpenCode:  $([[ -L ~/.config/opencode/skills/voiceforge ]] && echo '✓ 链接' || echo '✗ 缺失')"
+echo "OpenClaw:  $([[ -L ~/.openclaw/skills/voiceforge ]] && echo '✓ 链接' || echo '✗ 缺失')"
+```
+
+### 9.3 Skill 激活测试
+
+在 voiceforge 项目目录发起任务：
+
+```
+生成一段关于 AI 发展趋势的辩论播客 TTS 音频，使用立体声和背景音乐。
+```
+
+Agent 应能：
+- 自动识别 `voiceforge` skill
+- 引用 `SKILL.md` 中的命令和架构说明
+- 正确执行 TTS 合成任务
+
+---
+
+## 10. 更新 Skill
+
+skill 源码更新后，重新运行安装脚本：
+
+```bash
+cd <skill-source-directory>
+bash scripts/install.sh  # 自动备份旧版本
+```
+
+---
+
+## 11. 文件结构
+
+安装后的 skill 目录结构：
+
+```
+~/.agents/skills/voiceforge/
+├── SKILL.md                 # Skill 主入口（含触发条件和用法）
+├── pyproject.toml           # Python 包配置（pip install -e .）
+├── requirements.txt         # pip 依赖清单（可选）
+├── README.md                # 项目说明（可选）
+├── INSTALL.md               # 本安装指南（可选）
+├── CHANGELOG.md             # 版本变更记录（可选）
+├── scripts/
+│   ├── install.sh           # 多 Agent 安装脚本
+│   └── test_voices.py       # 音色测试工具
+├── src/                     # Clean Architecture 源码
+│   ├── adapters/            # TTS 引擎适配器
+│   ├── core/                # 核心引擎（TTS + LLM）
+│   ├── entities/            # 数据实体
+│   ├── infrastructure/      # CLI 和依赖注入
+│   ├── services/            # API 客户端
+│   └── use_cases/           # 业务用例
+├── tests/                   # 测试套件
+│   ├── test_adapters/
+│   ├── test_entities/
+│   ├── test_infrastructure/
+│   └── test_use_cases/
+├── docs/                    # 文档（可选）
+│   └── TROUBLESHOOTING.md   # 故障排查指南
+└── references/              # 参考配置（可选）
+    └── configs/             # 角色库配置
+
+# 符号链接
+~/.claude/skills/voiceforge → ~/.agents/skills/voiceforge
+~/.config/opencode/skills/voiceforge → ~/.agents/skills/voiceforge
+~/.openclaw/skills/voiceforge → ~/.agents/skills/voiceforge
+```

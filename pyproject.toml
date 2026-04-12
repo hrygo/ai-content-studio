@@ -1,25 +1,19 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ai-content-studio"
-version = "1.2.1"
-description = "专业级 AI 音频内容创作工具 - 三引擎编排播客制作系统"
+name = "voiceforge"
+version = "2.0.0"
+description = "VoiceForge — 专业级 AI 音频内容创作工具，三引擎编排播客制作系统"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "AI Content Studio Team"}
+    {name = "VoiceForge Team"}
 ]
 keywords = [
-    "ai",
-    "tts",
-    "podcast",
-    "audio-generation",
-    "speech-synthesis",
-    "minimax",
-    "qwen",
-    "dashscope"
+    "ai", "tts", "podcast", "audio-generation",
+    "speech-synthesis", "minimax", "qwen", "dashscope",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -28,54 +22,50 @@ classifiers = [
     "Topic :: Multimedia :: Sound/Audio :: Speech",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 
 dependencies = [
     "requests>=2.28.0",
     "tenacity>=8.0.0",
     "pydub>=0.25.0",
-    "rich>=13.0.0",
-    "cachetools>=5.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
-    "black>=22.0.0",
-    "flake8>=5.0.0",
+    "ruff>=0.4.0",
     "mypy>=1.0.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/hrygo/ai-content-studio"
-Documentation = "https://github.com/hrygo/ai-content-studio#readme"
-Repository = "https://github.com/hrygo/ai-content-studio.git"
-Issues = "https://github.com/hrygo/ai-content-studio/issues"
+Homepage = "https://github.com/hrygo/voiceforge"
+Documentation = "https://github.com/hrygo/voiceforge#readme"
+Repository = "https://github.com/hrygo/voiceforge.git"
+Issues = "https://github.com/hrygo/voiceforge/issues"
 
 [project.scripts]
-# Clean Architecture CLI 入口
-ai-studio = "src.infrastructure.cli:main"
+voiceforge = "voiceforge.infrastructure.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["src*"]
+where = ["src"]
+include = ["voiceforge*"]
 
 [tool.setuptools.package-data]
-src = ["py.typed"]
+voiceforge = ["py.typed"]
 
-[tool.black]
+[tool.ruff]
+target-version = "py310"
 line-length = 100
-target-version = ['py38', 'py39', 'py310', 'py311']
-include = '\.pyi?$'
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "SIM"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false

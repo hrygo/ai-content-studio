@@ -86,8 +86,8 @@
 ### 使用方法
 
 ```bash
-ai-studio dialogue --source "内容.txt" --engine qwen_tts -o out.mp3
-ai-studio dialogue --source "内容.txt" --roles configs/qwen_voices.json -o out.mp3
+voiceforge dialogue --source "内容.txt" --engine qwen_tts -o out.mp3
+voiceforge dialogue --source "内容.txt" --roles configs/qwen_voices.json -o out.mp3
 ```
 
 > **自动音色分配**: LLM 生成的脚本中角色超出 `role_defaults` 范围时，会自动从 `voice_pool` 轮询分配。

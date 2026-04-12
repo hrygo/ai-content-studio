@@ -1,4 +1,4 @@
-# AI Content Studio 用户手册
+# VoiceForge 用户手册
 
 ## 目录
 
@@ -13,7 +13,7 @@
 
 ## 1. 这是什么工具
 
-AI Content Studio 可以把**文字内容**变成**专业播客音频**。
+VoiceForge 可以把**文字内容**变成**专业播客音频**。
 
 你输入一篇文章、一段新闻或一份报告，它会自动生成一段像广播节目一样的对话音频——有多个角色、有讨论、有节奏感，就像两个人在聊天。
 
@@ -48,7 +48,7 @@ AI Content Studio 可以把**文字内容**变成**专业播客音频**。
 ### 第一步：安装 Python 依赖
 
 ```bash
-cd ai-content-studio
+cd voiceforge
 pip install -e .
 ```
 
@@ -66,7 +66,7 @@ sudo apt install ffmpeg
 
 ### 第三步：配置 API Key
 
-AI Content Studio 需要两个 AI 服务账号（都是国内服务，支付宝/阿里云账号即可开通）：
+VoiceForge 需要两个 AI 服务账号（都是国内服务，支付宝/阿里云账号即可开通）：
 
 #### MiniMax（主要引擎，推荐开通）
 
@@ -112,7 +112,7 @@ export DASHSCOPE_API_KEY="your-dashscope-key"
 ### 验证配置
 
 ```bash
-ai-studio studio --topic "测试" -o /tmp/test.mp3
+voiceforge studio --topic "测试" -o /tmp/test.mp3
 ```
 
 看到类似输出即为配置成功：
@@ -130,7 +130,7 @@ ai-studio studio --topic "测试" -o /tmp/test.mp3
 ### 最简命令
 
 ```bash
-ai-studio studio --topic "你的内容.txt" -o my_podcast.mp3
+voiceforge studio --topic "你的内容.txt" -o my_podcast.mp3
 ```
 
 工具会自动：
@@ -142,7 +142,7 @@ ai-studio studio --topic "你的内容.txt" -o my_podcast.mp3
 ### 命令结构解析
 
 ```bash
-ai-studio studio \
+voiceforge studio \
   --topic "播客主题"        \   # 播客主题（必填）
   -o output.mp3             \   # 输出文件名
   --llm qwen               \   # LLM 引擎（默认 minimax）
@@ -174,7 +174,7 @@ ai-studio studio \
 适合将长文章转化为有深度讨论感的音频节目。
 
 ```bash
-ai-studio studio --topic "技术文章" -o "深度播客.mp3"
+voiceforge studio --topic "技术文章" -o "深度播客.mp3"
 ```
 
 **效果**：两个角色围绕主题展开讨论，有提问、有反驳、有总结，模拟真实播客节奏。
@@ -188,7 +188,7 @@ ai-studio studio --topic "技术文章" -o "深度播客.mp3"
 适合将报告、新闻、公告快速转化为可听的简报。
 
 ```bash
-ai-studio studio --topic "周报内容" -o "周报摘要.mp3"
+voiceforge studio --topic "周报内容" -o "周报摘要.mp3"
 ```
 
 **效果**：单一专业主播音色，语速适中，清晰播报核心内容。类似新闻广播风格。
@@ -202,7 +202,7 @@ ai-studio studio --topic "周报内容" -o "周报摘要.mp3"
 模拟专家视角，对产品/事件进行评价，有赞有弹。
 
 ```bash
-ai-studio studio --topic "产品评测内容" -o "产品评论.mp3"
+voiceforge studio --topic "产品评测内容" -o "产品评论.mp3"
 ```
 
 **效果**：专家角色会分析优点和不足，观点平衡，适合帮助听众全面了解事物。
@@ -214,7 +214,7 @@ ai-studio studio --topic "产品评测内容" -o "产品评论.mp3"
 适合将争议性话题做成正反方对辩节目。
 
 ```bash
-ai-studio studio --topic "AI是否会取代人类工作" -o "辩论节目.mp3"
+voiceforge studio --topic "AI是否会取代人类工作" -o "辩论节目.mp3"
 ```
 
 **效果**：正方和反方各自陈述观点，主持人引导节奏，最终给出综合结论。模拟辩论赛结构。
@@ -272,7 +272,7 @@ ai-studio studio --topic "AI是否会取代人类工作" -o "辩论节目.mp3"
 使用自定义角色库：
 
 ```bash
-ai-studio studio --topic "内容" --roles my_roles.json -o "定制播客.mp3"
+voiceforge studio --topic "内容" --roles my_roles.json -o "定制播客.mp3"
 ```
 
 **注意**：角色名需要与脚本中的标签匹配。脚本会生成类似 `[主播小王, happy]:` 的标签，确保 JSON 中的键名一致。
@@ -373,7 +373,7 @@ ai-studio studio --topic "内容" --roles my_roles.json -o "定制播客.mp3"
 运行合成：
 
 ```bash
-ai-studio dialogue --source dialogue.txt -o "对话音频.mp3"
+voiceforge dialogue --source dialogue.txt -o "对话音频.mp3"
 ```
 
 ---
@@ -397,7 +397,7 @@ ai-studio dialogue --source dialogue.txt -o "对话音频.mp3"
 
 ```bash
 # 强制使用 Qwen（最便宜，有免费额度）
-ai-studio dialogue --source "内容" --engine qwen_tts -o out.mp3
+voiceforge dialogue --source "内容" --engine qwen_tts -o out.mp3
 ```
 
 ### Q：生成时间很长怎么办？
@@ -432,17 +432,17 @@ ai-studio dialogue --source "内容" --engine qwen_tts -o out.mp3
 
 ```bash
 # AI 播客（最常用）
-ai-studio studio --topic "内容" -o out.mp3
+voiceforge studio --topic "内容" -o out.mp3
 
 # 对话脚本 TTS
-ai-studio dialogue --source dialogue.txt -o dialogue.mp3
+voiceforge dialogue --source dialogue.txt -o dialogue.mp3
 
 # 加背景音乐
-ai-studio studio --topic "内容" --bgm music.mp3 -o with_bgm.mp3
+voiceforge studio --topic "内容" --bgm music.mp3 -o with_bgm.mp3
 
 # 自定义角色
-ai-studio studio --topic "内容" --roles my_roles.json -o custom.mp3
+voiceforge studio --topic "内容" --roles my_roles.json -o custom.mp3
 
 # 批量合成
-ai-studio batch --segments "开头|cherry,正文|ethan" -o episode.mp3
+voiceforge batch --segments "开头|cherry,正文|ethan" -o episode.mp3
 ```

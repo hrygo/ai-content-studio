@@ -3,7 +3,7 @@
 ## 引擎不可用
 
 ```bash
-ai-studio studio --topic "测试" -o /tmp/test.mp3
+voiceforge studio --topic "测试" -o /tmp/test.mp3
 ```
 
 返回示例：

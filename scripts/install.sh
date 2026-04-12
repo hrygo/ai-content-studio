@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #────────────────────────────────────────────────────────────────────────────
-# ai-content-studio Skill 安装脚本
+# VoiceForge Skill 安装脚本
 #────────────────────────────────────────────────────────────────────────────
-# 功能：将 ai-content-studio skill 安装到多个 AI Agent 的 skills 目录
+# 功能：将 VoiceForge skill 安装到多个 AI Agent 的 skills 目录
 # 用法：bash scripts/install.sh [OPTIONS]
 #
 # OPTIONS:
@@ -12,10 +12,10 @@
 #   --help                   显示帮助
 #
 # 安装路径矩阵：
-#   ~/.agents/skills/ai-content-studio/       主路径（通用标准，Codex/Cursor/Cline 原生支持）
-#   ~/.claude/skills/ai-content-studio       Claude Code 兼容（符号链接）
-#   ~/.config/opencode/skills/ai-content-studio  OpenCode 兼容（符号链接）
-#   ~/.openclaw/skills/ai-content-studio     OpenClaw 兼容（符号链接）
+#   ~/.agents/skills/voiceforge/       主路径（通用标准，Codex/Cursor/Cline 原生支持）
+#   ~/.claude/skills/voiceforge       Claude Code 兼容（符号链接）
+#   ~/.config/opencode/skills/voiceforge  OpenCode 兼容（符号链接）
+#   ~/.openclaw/skills/voiceforge     OpenClaw 兼容（符号链接）
 #
 # Skill Bundle 结构（Clean Architecture 重构后）：
 #   SKILL.md           ← Skill 主入口（Claude Code skill 识别文件）
@@ -33,7 +33,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-SKILL_NAME="ai-content-studio"
+SKILL_NAME="voiceforge"
 
 #────────────────────────────────────────────────────────────────────────────
 # 安装路径变量
@@ -43,7 +43,7 @@ LINK_CLAUDE="${HOME}/.claude/skills/${SKILL_NAME}"                   # Claude Co
 LINK_OPENCODE="${HOME}/.config/opencode/skills/${SKILL_NAME}"        # OpenCode
 LINK_OPENCLAW="${HOME}/.openclaw/skills/${SKILL_NAME}"               # OpenClaw
 
-INSTALL_MARKER="${SKILL_DEST}/.installed_from_ai_content_studio_repo"
+INSTALL_MARKER="${SKILL_DEST}/.installed_from_voiceforge_repo"
 
 #────────────────────────────────────────────────────────────────────────────
 # 参数解析
@@ -54,7 +54,7 @@ CLEANUP_BACKUPS=false
 
 show_help() {
     cat << 'EOF'
-ai-content-studio Skill 安装脚本
+voiceforge Skill 安装脚本
 
 用法：bash scripts/install.sh [OPTIONS]
 
@@ -70,20 +70,20 @@ OPTIONS:
   --help                   显示此帮助
 
 安装路径：
-  ~/.agents/skills/ai-content-studio/         主路径（通用标准）
-  ~/.claude/skills/ai-content-studio          Claude Code 符号链接
-  ~/.config/opencode/skills/ai-content-studio OpenCode 符号链接
-  ~/.openclaw/skills/ai-content-studio        OpenClaw 符号链接
+  ~/.agents/skills/voiceforge/         主路径（通用标准）
+  ~/.claude/skills/voiceforge          Claude Code 符号链接
+  ~/.config/opencode/skills/voiceforge OpenCode 符号链接
+  ~/.openclaw/skills/voiceforge        OpenClaw 符号链接
 
 备份位置：
-  /tmp/ai-content-studio-backups/             所有备份文件
+  /tmp/voiceforge-backups/             所有备份文件
   （自动清理 7 天前的备份）
 
 安装后可用：
-  ai-studio synthesize ...   # 单段 TTS
-  ai-studio dialogue ...     # 对话脚本 TTS
-  ai-studio studio ...       # AI 播客（全流程）
-  ai-studio batch ...         # 批量 TTS
+  voiceforge synthesize ...   # 单段 TTS
+  voiceforge dialogue ...     # 对话脚本 TTS
+  voiceforge studio ...       # AI 播客（全流程）
+  voiceforge batch ...         # 批量 TTS
 
 示例：
   bash scripts/install.sh                      # 安装到所有 Agent
@@ -138,7 +138,7 @@ backup_to_tmp() {
     timestamp=$(date +%Y%m%d_%H%M%S)
 
     # 创建备份目录
-    local backup_base="/tmp/ai-content-studio-backups"
+    local backup_base="/tmp/voiceforge-backups"
     mkdir -p "$backup_base"
 
     # 生成备份文件名（包含类型、原路径哈希、时间戳）
@@ -167,7 +167,7 @@ backup_to_tmp() {
 
 # 清理所有备份
 cleanup_all_backups() {
-    local backup_base="/tmp/ai-content-studio-backups"
+    local backup_base="/tmp/voiceforge-backups"
 
     if [[ -d "$backup_base" ]]; then
         local backup_count
@@ -231,7 +231,7 @@ create_link() {
 # 卸载
 #────────────────────────────────────────────────────────────────────────────
 uninstall_skill() {
-    echo "→ 卸载 ai-content-studio skill..."
+    echo "→ 卸载 voiceforge skill..."
     echo ""
 
     local links_removed=0
@@ -258,7 +258,7 @@ uninstall_skill() {
     fi
 
     # 显示备份信息
-    local backup_base="/tmp/ai-content-studio-backups"
+    local backup_base="/tmp/voiceforge-backups"
     if [[ -d "$backup_base" ]]; then
         local backup_count
         backup_count=$(ls -1 "$backup_base" 2>/dev/null | wc -l | tr -d ' ')
@@ -335,46 +335,14 @@ install_skill() {
 
     if [[ ! -f "${REPO_ROOT}/SKILL.md" ]] || [[ ! -d "${REPO_ROOT}/src" ]]; then
         echo "✗ 错误：找不到 SKILL.md 或 src/ 目录"
-        echo "  请确保在 ai-content-studio 项目根目录运行此脚本。"
+        echo "  请确保在 voiceforge 项目根目录运行此脚本。"
         exit 1
     fi
 
-    echo "→ 安装 ai-content-studio skill..."
+    echo "→ 安装 voiceforge skill..."
     echo "  源目录：${REPO_ROOT}/"
     echo "  目标 Agent：${TARGET_AGENT}"
     echo ""
-
-    # 检测路径自引用：REPO_ROOT == SKILL_DEST 表示从 skill 目录内直接运行
-    # 此时 SKILL_DEST 就是源码本身，backup_to_tmp 会删除源码，导致后续复制失败
-    # 注意：pwd 返回的路径可能带尾部斜杠，需要统一去除后比较
-    REPO_ROOT_NORM="${REPO_ROOT%/}"
-    if [[ "$REPO_ROOT_NORM" == "$SKILL_DEST" ]]; then
-        echo "  ℹ 检测到从 skill 源目录内运行（REPO_ROOT == SKILL_DEST）"
-        echo "  ℹ 跳过备份/删除/复制步骤，直接创建符号链接..."
-        echo ""
-
-        # 只创建符号链接（其他 agent 的 link）
-        case "$TARGET_AGENT" in
-            all)
-                create_link "$LINK_CLAUDE" "$SKILL_DEST" "Claude Code"
-                create_link "$LINK_OPENCODE" "$SKILL_DEST" "OpenCode"
-                create_link "$LINK_OPENCLAW" "$SKILL_DEST" "OpenClaw"
-                ;;
-            claude-code)
-                create_link "$LINK_CLAUDE" "$SKILL_DEST" "Claude Code"
-                ;;
-            opencode)
-                create_link "$LINK_OPENCODE" "$SKILL_DEST" "OpenCode"
-                ;;
-            openclaw)
-                create_link "$LINK_OPENCLAW" "$SKILL_DEST" "OpenClaw"
-                ;;
-        esac
-
-        echo ""
-        echo "✓ 安装完成！"
-        return
-    fi
 
     # 备份主安装（如果存在）
     if [[ -d "$SKILL_DEST" ]]; then
@@ -479,7 +447,7 @@ install_skill() {
 
         # 执行安装
         if install_deps; then
-            echo "  ✓ Python 依赖安装完成（ai-studio CLI 已注册）"
+            echo "  ✓ Python 依赖安装完成（voiceforge CLI 已注册）"
         else
             echo "  ✗ 自动安装失败。请手动执行："
             echo "    python3 -m pip install -e \"${SKILL_DEST}\" \\"

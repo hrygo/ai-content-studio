@@ -1,45 +1,9 @@
 # Changelog
 
-## [1.2.1] - 2026-04-06
-
-### ✨ New Features
-- **CLI --version**: 新增 `--version` 参数支持，方便版本验证。 
-- **快速开始**: INSTALL.md 新增 30 秒快速安装指南。
-
-### 🔄 Improvements
-- **依赖同步**: 同步 `pyproject.toml` 与 `requirements.txt` 依赖项（新增 rich, cachetools）。
-- **文档视觉增强**: 使用 GitHub Alerts 优化 INSTALL.md，视觉体验更佳。
-- **CLI 容错**: 优化无参数运行时的帮助提示逻辑。
-- **QwenTTSEngineAdapter**: 专用 TTS 引擎适配器，支持 `qwen3-tts-flash` 引擎
-- **懒加载初始化**: Container 使用懒加载模式，按需初始化 TTS 引擎
-
-### 🔄 Improvements (Previous)
-- **备份机制优化**: 迁移到 `/tmp/ai-content-studio-backups/`，避免污染 skills 目录
-- **自动备份清理**: 7 天后自动清理备份文件
-- **资源占用优化**: 减少不必要的引擎初始化开销
-- **安装包完整性**: CHANGELOG.md 包含到安装 bundle
-
-### 🐛 Bug Fixes
-- **遗留备份清理**: 自动删除旧版本遗留的备份文件
-
-### 📝 Documentation
-- 更新 INSTALL.md 文件结构说明
-- 补充历史版本变更记录（v1.1.0, v1.1.1）
-
-## [1.1.2] - 2026-04-05
-
-### Added
-- **QwenTTSEngineAdapter**: 新增专用 TTS 引擎适配器，支持 `qwen3-tts-flash` 引擎。
-
-### Changed
-- **懒加载优化**: Container 使用懒加载模式初始化 QwenTTSEngineAdapter，减少资源占用。
-- **安装包完整性**: 安装脚本现在包含 CHANGELOG.md 到安装 bundle。
-- **文档更新**: INSTALL.md 文件结构说明同步到当前实现。
-
 ## [1.1.1] - 2026-04-05
 
 ### Changed
-- **备份机制优化**: 将备份目录从 skills 目录迁移到 `/tmp/ai-content-studio-backups/`，避免污染 skills 目录。
+- **备份机制优化**: 将备份目录从 skills 目录迁移到 `/tmp/voiceforge-backups/`，避免污染 skills 目录。
 - **自动备份清理**: 备份文件保留 7 天后自动清理，减少磁盘占用。
 - **安装脚本增强**: 添加 `--cleanup-backups` 选项，支持手动清理所有备份文件。
 
@@ -58,7 +22,7 @@
 - **文档结构优化**: 将故障排查内容从 SKILL.md 整合到独立文档，提升可维护性。
 
 ### Fixed
-- **CLI 命令注册**: 修复 `ai-studio` 命令在 pip install 后无法找到的问题。
+- **CLI 命令注册**: 修复 `voiceforge` 命令在 pip install 后无法找到的问题。
 - **Python 依赖安装**: 添加镜像回退机制，解决国内镜像 403 错误。
 - **系统包保护绕过**: 自动添加 `--break-system-packages` 标志，解决 macOS Python 3.14+ 的安装限制。
 
@@ -79,7 +43,7 @@
 ## [1.0.0] - 2026-04-02
 
 ### Added
-- **AI Content Studio Skill**: 本地工具正式重构为多 Agent 兼容的 Skill (支持 Claude Code, OpenCode, OpenClaw)。
+- **VoiceForge Skill**: 本地工具正式重构为多 Agent 兼容的 Skill (支持 Claude Code, OpenCode, OpenClaw)。
 - **存储整合**: 将所有临时文件和缓存统一至 `work/` 目录，简化结构。
 - **结构优化**: 核心逻辑移至 `scripts/studio/`，文档移至 `references/`，提升 AI 检索效率。
 - **MiniMax 优先策略**: 默认使用 MiniMax T2A V2，支持自动故障转移至 Qwen 模型。

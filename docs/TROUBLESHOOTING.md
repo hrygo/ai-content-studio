@@ -1,4 +1,4 @@
-# AI Content Studio - 已知问题与解决方案
+# VoiceForge - 已知问题与解决方案
 
 > 最后更新：2026-04-05 v1.1.1
 
@@ -46,12 +46,12 @@ sudo sed -i '1s|^#!/usr/bin/python3$|#!/usr/bin/python3.10|' /usr/bin/cnf-update
 
 ## 🚀 运行时问题
 
-### 1. ai-studio CLI 未安装
+### 1. voiceforge CLI 未安装
 
 **症状**：
 ```bash
-$ ai-studio --help
-command not found: ai-studio
+$ voiceforge --help
+command not found: voiceforge
 ```
 
 **原因**：clone 后未安装 Python 包，CLI 入口点未注册
@@ -59,7 +59,7 @@ command not found: ai-studio
 **解决方案**：
 ```bash
 # 方式 1: pip 可编辑安装（推荐）
-cd ai-content-studio
+cd voiceforge
 python3 -m pip install -e . --break-system-packages
 
 # 方式 2: 使用 PYTHONPATH
@@ -112,7 +112,7 @@ ERROR: API 请求失败 (404): {"error": "Not Found"}
 **解决方案**：
 ```bash
 # 使用 Qwen Omni TTS 引擎（基于 /chat/completions）
-ai-studio synthesize --source "测试" --output test.mp3 --engine qwen_omni
+voiceforge synthesize --source "测试" --output test.mp3 --engine qwen_omni
 
 # 或在角色库中指定 engine: qwen_omni
 ```
@@ -257,7 +257,7 @@ python3 scripts/test_voices.py
    ```bash
    uname -a
    python3 --version
-   pip show ai-content-studio
+   pip show voiceforge
    ```
 
 2. **错误日志**：
@@ -272,7 +272,7 @@ python3 scripts/test_voices.py
    - 配置文件
    - 预期行为 vs 实际行为
 
-提交地址：https://github.com/hrygo/ai-content-studio/issues
+提交地址：https://github.com/hrygo/voiceforge/issues
 
 ---
 
